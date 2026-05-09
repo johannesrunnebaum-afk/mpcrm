@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'DM Sans', -apple-system, sans-serif;
+
+  --color-lime: #C8FF00;
+  --color-lime-dim: #B4E800;
+  --color-app-bg: #F2F2F2;
+  --color-app-border: #E8E8E8;
+  --color-app-border-dark: #D0D0D0;
+  --color-app-text: #1A1A1A;
+  --color-app-text2: #6B6B6B;
+  --color-app-text3: #ABABAB;
+  --color-orange-light: #FFF0E5;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  #__next {
+    height: 100%;
+    width: 100%;
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background-color: #F2F2F2;
+    color: #1A1A1A;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  input,
+  button,
+  select {
+    font-family: inherit;
+    font-size: 14px;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #D0D0D0;
+    border-radius: 3px;
+  }
+}

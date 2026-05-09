@@ -2,54 +2,83 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Running the App
+## Commands
 
-Open `index.html` directly in a browser — no build step, no server, no npm. There is no package.json, bundler, or test framework.
+```bash
+npm install      # install dependencies (first time)
+npm run dev      # start dev server at http://localhost:3000
+npm run build    # production build
+npm run lint     # ESLint
+```
 
 ## Stack
 
-- **Single-file React SPA** — all code lives in `index.html` (~1170 lines)
-- **React 18 + Babel standalone** loaded from CDN at runtime; JSX is transpiled in the browser via `<script type="text/babel">`
-- **No external state management, no router** — navigation is a `view` string + `selectedId` in `App` component state
-- **All data is hardcoded** in the `DATA` section — no API calls, no backend
+- **Next.js 15** with App Router and TypeScript
+- **React 19** (server + client components)
+- **Tailwind CSS v4** — configured via `app/globals.css` (`@theme` block), no `tailwind.config.ts`
+- **DM Sans** via `next/font/google`
+- **All data is hardcoded** in `lib/data.ts` — no backend, no API calls
 
 ## Architecture
 
-The `<script type="text/babel">` block is organized into named sections (marked by comments):
+```
+app/                  # Next.js App Router pages
+  layout.tsx          # Root layout: sidebar + topbar + <main>
+  page.tsx            # Dashboard
+  kunden/
+    page.tsx          # Customer list (client — search/filter state)
+    [id]/page.tsx     # Customer detail (client — tab state, useParams)
+  kontakte/page.tsx   # Contacts (client — search state)
+  health/page.tsx     # Health scores (server)
+  onboarding/page.tsx # Kanban pipeline (server)
+  renewals/page.tsx   # Renewal table (server)
+  kommunikation/page.tsx  # Activity feed (client — filter state)
+  berichte/page.tsx   # Analytics + SVG charts (server)
+  einstellungen/ hilfe/   # Placeholder stubs
 
-| Section | Contents |
-|---|---|
-| `THEME (C)` | Color token object (`C.lime`, `C.red`, etc.) |
-| `DATA` | Hardcoded arrays: `CUSTOMERS`, `CONTACTS`, `ACTIVITIES`, `ONBOARDING_DATA` |
-| `HELPERS` | `daysUntil()`, `formatDate()`, `healthColor()`, `healthBg()`, `healthLabel()` |
-| `ICONS` | SVG icon components object |
-| Shared UI | `Avatar`, `Badge`, `StatusBadge`, `PlanBadge`, `HealthBar`, `Card`, `KpiCard`, `TopBar` |
-| Layout | `Sidebar` (fixed 220 px, driven by `NAV` / `NAV2` arrays), `TopBar` |
-| Views | One component per route (see below) |
-| `App` | Root component — holds `view` + `selectedId` state, renders layout + active view |
+components/
+  Sidebar.tsx         # 'use client' — usePathname for active state; Link-based nav
+  TopBar.tsx          # 'use client' — derives title + back button from usePathname
+  Icons.tsx           # Named SVG exports (DashboardIcon, HealthIcon, etc.)
+  Avatar.tsx          # Circular avatar with inline color from data
+  Badge.tsx           # Badge, StatusBadge, PlanBadge
+  HealthBar.tsx       # Colored progress bar + score label
+  Card.tsx            # Card + KpiCard
 
-### Navigation model
+lib/
+  types.ts            # Customer, Contact, Activity, OnboardingEntry, Plan, etc.
+  data.ts             # CUSTOMERS, CONTACTS, ACTIVITIES, ONBOARDING_DATA, ONBOARDING_PHASES
+  helpers.ts          # daysUntil, formatDate, healthColor, healthBg, healthLabel
+```
 
-`App` renders the view matching the `view` string. Sidebar items call `setView(id)`. The `kunden-detail` view is a drill-down from `kunden`, parameterized by `selectedId`.
+## Key conventions
 
-| Route id | View component | Description |
-|---|---|---|
-| `dashboard` | `Dashboard` | KPI cards, health overview, recent activities |
-| `kunden` | `KundenList` | Searchable/filterable customer table |
-| `kunden-detail` | `KundeDetail` | Tabbed detail (Übersicht, Kontakte, Aktivitäten, Onboarding) |
-| `kontakte` | `KontakteView` | Contacts across all customers |
-| `health` | `HealthView` | Health score list with risk bands |
-| `onboarding` | `OnboardingView` | Kanban pipeline |
-| `renewals` | `RenewalsView` | Renewal deadlines with urgency coloring |
-| `kommunikation` | `KommunikationView` | Activity feed (email/call/note/system) |
-| `berichte` | `BerichteView` | Analytics with inline SVG charts |
+**Client vs server components**: Pages with local state (`useState`) are `'use client'`. Pages that only render data (health, onboarding, renewals, berichte) are server components. `Sidebar` and `TopBar` are always client components because they use `usePathname`.
 
-### Data model
+**Navigation**: `Sidebar` uses `next/link` with `usePathname()` to determine active state. `/kunden/[id]` highlights the Kunden nav item via `pathname.startsWith('/kunden')`.
 
-- **Customer**: `id`, `name`, `initials`, `color`, `plan` (Starter/Pro/Business), `mrr`, `health` (0–100), `status`, `renewal` (date), `industry`, `users`, `lastLogin`, `campaigns`, `projects`, `nps`
-- **Contact**: `customerId` foreign key → customer
-- **Activity**: `type` (email/call/note/system), `customerId`, user attribution
+**Dynamic colors**: Avatar background, health bar color, badge colors come from data and use inline `style` props — Tailwind cannot handle runtime hex values.
 
-## Styling conventions
+**Custom Tailwind colors** (defined in `app/globals.css` `@theme`):
+- `lime` → `#C8FF00` (active nav item background)
+- `app-bg` → `#F2F2F2` (page background)
+- `app-border` → `#E8E8E8`
+- `app-text` → `#1A1A1A`
+- `app-text2` → `#6B6B6B`
+- `app-text3` → `#ABABAB`
+- `orange-light` → `#FFF0E5`
 
-All styling uses inline `style` props with JavaScript objects. Global resets live in a `<style>` block in `<head>`. Color tokens come from the `C` object — use those rather than raw hex values.
+Standard Tailwind colors used: `violet-600` (#7C3AED for purple), `green-600`, `orange-600`, `red-600`, `blue-600`.
+
+**Data model**:
+- `Customer`: id, name, initials, color, plan (Starter/Pro/Business), mrr, health (0–100), status, renewal (date string), industry, users, lastLogin, campaigns, projects, nps
+- `Contact`: customerId FK → Customer
+- `Activity`: type (email/call/note/system), customerId, user, date, time
+
+## Environment variables
+
+`.env.local` contains placeholder keys for Supabase (not yet connected):
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
