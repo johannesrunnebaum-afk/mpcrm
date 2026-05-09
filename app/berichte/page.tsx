@@ -1,28 +1,27 @@
-import { CUSTOMERS } from '@/lib/data'
+import { getCustomers } from '@/lib/db'
 import { Card, KpiCard } from '@/components/Card'
 import Avatar from '@/components/Avatar'
 
-export default function BerichtePage() {
-  const totalMrr = CUSTOMERS.reduce((s, c) => s + c.mrr, 0)
-  const avgHealth = Math.round(CUSTOMERS.reduce((s, c) => s + c.health, 0) / CUSTOMERS.length)
-  const churnRisk = CUSTOMERS.filter((c) => c.status === 'Gefährdet').length
-  const churnRate = Math.round((churnRisk / CUSTOMERS.length) * 100)
+export default async function BerichtePage() {
+  const customers = await getCustomers()
+
+  const totalMrr = customers.reduce((s, c) => s + c.mrr, 0)
+  const avgHealth = Math.round(customers.reduce((s, c) => s + c.health, 0) / customers.length)
+  const churnRisk = customers.filter((c) => c.status === 'Gefährdet').length
+  const churnRate = Math.round((churnRisk / customers.length) * 100)
 
   const planDist = { Pro: 0, Business: 0, Starter: 0 } as Record<string, number>
   const mrrByPlan = { Pro: 0, Business: 0, Starter: 0 } as Record<string, number>
-  CUSTOMERS.forEach((c) => {
-    planDist[c.plan]++
-    mrrByPlan[c.plan] += c.mrr
-  })
+  customers.forEach((c) => { planDist[c.plan]++; mrrByPlan[c.plan] += c.mrr })
 
   const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai']
   const mrrData = [2200, 2499, 2599, 2794, 2893]
   const maxMrr = Math.max(...mrrData)
 
   const healthDist = [
-    { label: 'Gesund (70–100)', count: CUSTOMERS.filter((c) => c.health >= 70).length, color: '#16A34A' },
-    { label: 'Neutral (40–69)', count: CUSTOMERS.filter((c) => c.health >= 40 && c.health < 70).length, color: '#EA580C' },
-    { label: 'Gefährdet (0–39)', count: CUSTOMERS.filter((c) => c.health < 40).length, color: '#DC2626' },
+    { label: 'Gesund (70–100)', count: customers.filter((c) => c.health >= 70).length, color: '#16A34A' },
+    { label: 'Neutral (40–69)', count: customers.filter((c) => c.health >= 40 && c.health < 70).length, color: '#EA580C' },
+    { label: 'Gefährdet (0–39)', count: customers.filter((c) => c.health < 40).length, color: '#DC2626' },
   ]
 
   const planColors: Record<string, string> = { Pro: '#7C3AED', Business: '#2563EB', Starter: '#6B6B6B' }
@@ -35,16 +34,14 @@ export default function BerichtePage() {
         <p style={{ color: '#6B6B6B', fontSize: 13, marginTop: 2 }}>Übersicht über dein Customer-Portfolio</p>
       </div>
 
-      {/* Top KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
         <KpiCard label="Gesamt MRR" value={`${totalMrr.toLocaleString('de-DE')} €`} sub="+3.6% zum Vormonat" />
         <KpiCard label="ARR (Jahresumsatz)" value={`${(totalMrr * 12).toLocaleString('de-DE')} €`} sub="Hochgerechnet" />
-        <KpiCard label="Ø Health Score" value={avgHealth} sub={`${CUSTOMERS.length} Kunden`} />
-        <KpiCard label="Churn-Risiko" value={`${churnRate}%`} sub={`${churnRisk} von ${CUSTOMERS.length} Kunden`} />
+        <KpiCard label="Ø Health Score" value={avgHealth} sub={`${customers.length} Kunden`} />
+        <KpiCard label="Churn-Risiko" value={`${churnRate}%`} sub={`${churnRisk} von ${customers.length} Kunden`} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        {/* MRR Chart */}
         <Card>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>MRR Entwicklung</div>
           <svg width="100%" height="160" viewBox="0 0 400 160">
@@ -57,32 +54,14 @@ export default function BerichtePage() {
                 <stop offset="100%" stopColor="#C8FF00" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path
-              d={`M${mrrData.map((v, i) => `${40 + i * 80},${140 - (v / maxMrr) * 120}`).join(' L')} L${40 + (mrrData.length - 1) * 80},140 L40,140 Z`}
-              fill="url(#mrrGrad)"
-            />
-            <polyline
-              points={mrrData.map((v, i) => `${40 + i * 80},${140 - (v / maxMrr) * 120}`).join(' ')}
-              fill="none"
-              stroke="#1A1A1A"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-            {mrrData.map((v, i) => (
-              <circle key={i} cx={40 + i * 80} cy={140 - (v / maxMrr) * 120} r="4" fill="#1A1A1A" />
-            ))}
-            {months.map((m, i) => (
-              <text key={i} x={40 + i * 80} y="158" textAnchor="middle" fontSize="11" fill="#6B6B6B">{m}</text>
-            ))}
-            {mrrData.map((v, i) => (
-              <text key={i} x={40 + i * 80} y={130 - (v / maxMrr) * 120} textAnchor="middle" fontSize="10" fill="#1A1A1A" fontWeight="600">
-                {v}€
-              </text>
-            ))}
+            <path d={`M${mrrData.map((v, i) => `${40 + i * 80},${140 - (v / maxMrr) * 120}`).join(' L')} L${40 + (mrrData.length - 1) * 80},140 L40,140 Z`} fill="url(#mrrGrad)" />
+            <polyline points={mrrData.map((v, i) => `${40 + i * 80},${140 - (v / maxMrr) * 120}`).join(' ')} fill="none" stroke="#1A1A1A" strokeWidth="2.5" strokeLinejoin="round" />
+            {mrrData.map((v, i) => <circle key={i} cx={40 + i * 80} cy={140 - (v / maxMrr) * 120} r="4" fill="#1A1A1A" />)}
+            {months.map((m, i) => <text key={i} x={40 + i * 80} y="158" textAnchor="middle" fontSize="11" fill="#6B6B6B">{m}</text>)}
+            {mrrData.map((v, i) => <text key={i} x={40 + i * 80} y={130 - (v / maxMrr) * 120} textAnchor="middle" fontSize="10" fill="#1A1A1A" fontWeight="600">{v}€</text>)}
           </svg>
         </Card>
 
-        {/* Health Distribution */}
         <Card>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Health Score Verteilung</div>
           {healthDist.map((h) => (
@@ -92,7 +71,7 @@ export default function BerichtePage() {
                 <span style={{ fontWeight: 700, color: h.color }}>{h.count} Kunden</span>
               </div>
               <div style={{ width: '100%', height: 8, background: '#F2F2F2', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ width: `${(h.count / CUSTOMERS.length) * 100}%`, height: '100%', background: h.color, borderRadius: 4 }} />
+                <div style={{ width: `${(h.count / customers.length) * 100}%`, height: '100%', background: h.color, borderRadius: 4 }} />
               </div>
             </div>
           ))}
@@ -108,7 +87,6 @@ export default function BerichtePage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {/* Plan Distribution */}
         <Card>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Plan-Verteilung & MRR</div>
           {Object.entries(planDist).map(([plan, count]) => (
@@ -121,18 +99,17 @@ export default function BerichtePage() {
                 <div style={{ fontSize: 11, color: '#6B6B6B' }}>{count} Kunden · {mrrByPlan[plan]} €/mo</div>
               </div>
               <div style={{ width: 80, height: 6, background: '#F2F2F2', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${(count / CUSTOMERS.length) * 100}%`, height: '100%', background: planColors[plan], borderRadius: 3 }} />
+                <div style={{ width: `${(count / customers.length) * 100}%`, height: '100%', background: planColors[plan], borderRadius: 3 }} />
               </div>
               <span style={{ fontWeight: 700, fontSize: 13, minWidth: 32, textAlign: 'right' }}>{count}</span>
             </div>
           ))}
         </Card>
 
-        {/* Top & Bottom Performers */}
         <Card>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Top & Risiko Kunden</div>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#16A34A', marginBottom: 8, letterSpacing: '0.5px' }}>TOP PERFORMER</div>
-          {[...CUSTOMERS].sort((a, b) => b.health - a.health).slice(0, 3).map((c) => (
+          {[...customers].sort((a, b) => b.health - a.health).slice(0, 3).map((c) => (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
               <Avatar initials={c.initials} color={c.color} size={28} />
               <span style={{ flex: 1, fontSize: 12, fontWeight: 500 }}>{c.name}</span>
@@ -141,7 +118,7 @@ export default function BerichtePage() {
           ))}
           <div style={{ height: 1, background: '#E8E8E8', margin: '10px 0' }} />
           <div style={{ fontSize: 11, fontWeight: 700, color: '#DC2626', marginBottom: 8, letterSpacing: '0.5px' }}>CHURN RISIKO</div>
-          {[...CUSTOMERS].sort((a, b) => a.health - b.health).slice(0, 3).map((c) => (
+          {[...customers].sort((a, b) => a.health - b.health).slice(0, 3).map((c) => (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
               <Avatar initials={c.initials} color={c.color} size={28} />
               <span style={{ flex: 1, fontSize: 12, fontWeight: 500 }}>{c.name}</span>

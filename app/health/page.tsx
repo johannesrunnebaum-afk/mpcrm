@@ -1,15 +1,16 @@
 import Link from 'next/link'
-import { CUSTOMERS } from '@/lib/data'
+import { getCustomers } from '@/lib/db'
 import { formatDate, healthColor, healthBg, healthLabel } from '@/lib/helpers'
 import { Card } from '@/components/Card'
 import Avatar from '@/components/Avatar'
 import HealthBar from '@/components/HealthBar'
 
-export default function HealthPage() {
-  const sorted = [...CUSTOMERS].sort((a, b) => a.health - b.health)
-  const gesund = CUSTOMERS.filter((c) => c.health >= 70).length
-  const neutral = CUSTOMERS.filter((c) => c.health >= 40 && c.health < 70).length
-  const gefaehrdet = CUSTOMERS.filter((c) => c.health < 40).length
+export default async function HealthPage() {
+  const customers = await getCustomers()
+  const sorted = [...customers].sort((a, b) => a.health - b.health)
+  const gesund = customers.filter((c) => c.health >= 70).length
+  const neutral = customers.filter((c) => c.health >= 40 && c.health < 70).length
+  const gefaehrdet = customers.filter((c) => c.health < 40).length
 
   return (
     <div style={{ padding: 28, overflow: 'auto', flex: 1 }}>
@@ -44,54 +45,21 @@ export default function HealthPage() {
           const col = healthColor(c.health)
           const bg = healthBg(c.health)
           return (
-            <Link
-              key={c.id}
-              href={`/kunden/${c.id}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 16,
-                padding: '14px 20px',
-                borderBottom: '1px solid #E8E8E8',
-                cursor: 'pointer',
-              }}
-            >
+            <Link key={c.id} href={`/kunden/${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', borderBottom: '1px solid #E8E8E8', cursor: 'pointer' }}>
               <Avatar initials={c.initials} color={c.color} size={38} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{c.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <HealthBar score={c.health} width={200} showLabel />
-                </div>
+                <HealthBar score={c.health} width={200} showLabel />
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <div style={{ fontSize: 11, color: '#6B6B6B' }}>{c.plan} · {c.mrr} €/mo</div>
                 <div style={{ fontSize: 11, color: '#6B6B6B', marginTop: 2 }}>Login: {formatDate(c.lastLogin)}</div>
               </div>
-              <div
-                style={{
-                  padding: '4px 12px',
-                  borderRadius: 20,
-                  background: bg,
-                  color: col,
-                  fontWeight: 700,
-                  fontSize: 12,
-                  flexShrink: 0,
-                }}
-              >
+              <div style={{ padding: '4px 12px', borderRadius: 20, background: bg, color: col, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                 {healthLabel(c.health)}
               </div>
               {c.health < 40 && (
-                <button
-                  style={{
-                    padding: '6px 12px',
-                    background: '#DC2626',
-                    color: '#fff',
-                    borderRadius: 7,
-                    fontWeight: 600,
-                    fontSize: 12,
-                    flexShrink: 0,
-                  }}
-                >
+                <button style={{ padding: '6px 12px', background: '#DC2626', color: '#fff', borderRadius: 7, fontWeight: 600, fontSize: 12, flexShrink: 0 }}>
                   Kontaktieren
                 </button>
               )}

@@ -1,15 +1,14 @@
-'use client'
-
 import Link from 'next/link'
-import { CUSTOMERS } from '@/lib/data'
+import { getCustomers } from '@/lib/db'
 import { daysUntil, formatDate } from '@/lib/helpers'
 import { Card } from '@/components/Card'
 import Avatar from '@/components/Avatar'
 import { PlanBadge } from '@/components/Badge'
 import HealthBar from '@/components/HealthBar'
 
-export default function RenewalsPage() {
-  const sorted = [...CUSTOMERS].sort((a, b) => daysUntil(a.renewal) - daysUntil(b.renewal))
+export default async function RenewalsPage() {
+  const customers = await getCustomers()
+  const sorted = [...customers].sort((a, b) => daysUntil(a.renewal) - daysUntil(b.renewal))
   const urgent = sorted.filter((c) => daysUntil(c.renewal) <= 60)
   const warning = sorted.filter((c) => daysUntil(c.renewal) > 60 && daysUntil(c.renewal) <= 120)
   const ok = sorted.filter((c) => daysUntil(c.renewal) > 120)
@@ -44,9 +43,7 @@ export default function RenewalsPage() {
           <thead>
             <tr style={{ borderBottom: '1px solid #E8E8E8', background: '#FAFAFA' }}>
               {['Kunde', 'Plan', 'MRR', 'Renewal-Datum', 'Verbleibend', 'Health', 'Aktion'].map((h) => (
-                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B6B6B' }}>
-                  {h}
-                </th>
+                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B6B6B' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -56,12 +53,7 @@ export default function RenewalsPage() {
               const col = days <= 60 ? '#DC2626' : days <= 120 ? '#EA580C' : '#16A34A'
               const bg = days <= 60 ? '#FEE2E2' : days <= 120 ? '#FFF0E5' : '#DCFCE7'
               return (
-                <tr
-                  key={c.id}
-                  style={{ borderBottom: '1px solid #E8E8E8', cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#FAFAFA')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
+                <tr key={c.id} className="hover:bg-[#FAFAFA] cursor-pointer" style={{ borderBottom: '1px solid #E8E8E8' }}>
                   <td style={{ padding: '12px 16px' }}>
                     <Link href={`/kunden/${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Avatar initials={c.initials} color={c.color} size={32} />
@@ -75,27 +67,13 @@ export default function RenewalsPage() {
                   <td style={{ padding: '12px 16px', fontWeight: 700, fontSize: 13 }}>{c.mrr} €</td>
                   <td style={{ padding: '12px 16px', fontSize: 13 }}>{formatDate(c.renewal)}</td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ padding: '3px 10px', borderRadius: 20, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>
-                      {days} Tage
-                    </span>
+                    <span style={{ padding: '3px 10px', borderRadius: 20, background: bg, color: col, fontWeight: 700, fontSize: 12 }}>{days} Tage</span>
                   </td>
                   <td style={{ padding: '12px 16px' }}><HealthBar score={c.health} width={80} /></td>
                   <td style={{ padding: '12px 16px' }}>
-                    {days <= 60 && (
-                      <button style={{ padding: '5px 12px', background: '#DC2626', color: '#fff', borderRadius: 7, fontWeight: 600, fontSize: 11 }}>
-                        Jetzt handeln
-                      </button>
-                    )}
-                    {days > 60 && days <= 120 && (
-                      <button style={{ padding: '5px 12px', background: '#FFF0E5', color: '#EA580C', borderRadius: 7, fontWeight: 600, fontSize: 11 }}>
-                        Planen
-                      </button>
-                    )}
-                    {days > 120 && (
-                      <button style={{ padding: '5px 12px', background: '#F2F2F2', color: '#6B6B6B', borderRadius: 7, fontWeight: 500, fontSize: 11 }}>
-                        Im Blick
-                      </button>
-                    )}
+                    {days <= 60 && <button style={{ padding: '5px 12px', background: '#DC2626', color: '#fff', borderRadius: 7, fontWeight: 600, fontSize: 11 }}>Jetzt handeln</button>}
+                    {days > 60 && days <= 120 && <button style={{ padding: '5px 12px', background: '#FFF0E5', color: '#EA580C', borderRadius: 7, fontWeight: 600, fontSize: 11 }}>Planen</button>}
+                    {days > 120 && <button style={{ padding: '5px 12px', background: '#F2F2F2', color: '#6B6B6B', borderRadius: 7, fontWeight: 500, fontSize: 11 }}>Im Blick</button>}
                   </td>
                 </tr>
               )
