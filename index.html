@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mpilot CRM</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;width:100%}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:#F2F2F2;color:#1A1A1A;font-size:14px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D0D0D0;border-radius:3px}
+input,button,select{font-family:inherit;font-size:14px}
+button{cursor:pointer;border:none;background:none}
+a{text-decoration:none;color:inherit}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo,useCallback,useRef}=React;
+
+// ─── THEME ───────────────────────────────────────────────────
+const C={
+  lime:'#C8FF00', limeDim:'#B4E800',
+  bg:'#F2F2F2', white:'#FFFFFF',
+  border:'#E8E8E8', borderDark:'#D0D0D0',
+  text:'#1A1A1A', text2:'#6B6B6B', text3:'#ABABAB',
+  purple:'#7C3AED', purpleLight:'#EDE9FE',
+  green:'#16A34A', greenLight:'#DCFCE7',
+  orange:'#EA580C', orangeLight:'#FFF0E5',
+  red:'#DC2626', redLight:'#FEE2E2',
+  blue:'#2563EB', blueLight:'#DBEAFE',
+  yellow:'#CA8A04', yellowLight:'#FEF9C3',
+};
+
+// ─── DATA ─────────────────────────────────────────────────────
+const CUSTOMERS=[
+  {id:1,name:'Aufwind GmbH',initials:'AG',color:'#7C3AED',plan:'Pro',mrr:299,health:92,status:'Aktiv',renewal:'2026-12-01',industry:'Marketing',users:8,lastLogin:'2026-05-08',campaigns:3,projects:2,nps:9},
+  {id:2,name:'Thorge Storch Events',initials:'TS',color:'#059669',plan:'Starter',mrr:99,health:45,status:'Gefährdet',renewal:'2026-06-15',industry:'Events',users:2,lastLogin:'2026-04-20',campaigns:1,projects:1,nps:6},
+  {id:3,name:'Kreativ Studio',initials:'KS',color:'#D97706',plan:'Pro',mrr:299,health:78,status:'Aktiv',renewal:'2026-09-30',industry:'Design',users:5,lastLogin:'2026-05-06',campaigns:2,projects:3,nps:8},
+  {id:4,name:'MediaHouse Berlin',initials:'MB',color:'#DC2626',plan:'Business',mrr:599,health:23,status:'Gefährdet',renewal:'2026-07-01',industry:'Medien',users:12,lastLogin:'2026-04-10',campaigns:0,projects:1,nps:3},
+  {id:5,name:'Marketingwerk',initials:'MW',color:'#0284C7',plan:'Pro',mrr:299,health:88,status:'Aktiv',renewal:'2027-01-15',industry:'Marketing',users:6,lastLogin:'2026-05-07',campaigns:4,projects:2,nps:9},
+  {id:6,name:'Digital Spark',initials:'DS',color:'#DB2777',plan:'Starter',mrr:99,health:65,status:'Aktiv',renewal:'2026-11-01',industry:'Agentur',users:3,lastLogin:'2026-05-05',campaigns:1,projects:1,nps:7},
+  {id:7,name:'Brand Force',initials:'BF',color:'#6D28D9',plan:'Business',mrr:599,health:31,status:'Gefährdet',renewal:'2026-06-30',industry:'Branding',users:9,lastLogin:'2026-04-25',campaigns:1,projects:2,nps:4},
+  {id:8,name:'Pixelwerk GmbH',initials:'PW',color:'#059669',plan:'Business',mrr:599,health:95,status:'Aktiv',renewal:'2027-03-01',industry:'Design',users:15,lastLogin:'2026-05-08',campaigns:5,projects:4,nps:10},
+];
+
+const CONTACTS=[
+  {id:1,customerId:1,name:'Johannes Runnebaum',role:'Marketing Manager',email:'j.runnebaum@aufwind.de',phone:'+49 421 123456',initials:'JR',color:'#F59E0B',lastContact:'2026-05-08'},
+  {id:2,customerId:1,name:'Lisa Hoffmann',role:'CMO',email:'l.hoffmann@aufwind.de',phone:'+49 421 123457',initials:'LH',color:'#7C3AED',lastContact:'2026-04-30'},
+  {id:3,customerId:2,name:'Thorge Storch',role:'Geschäftsführer',email:'t.storch@events.de',phone:'+49 4261 987654',initials:'TS',color:'#059669',lastContact:'2026-04-20'},
+  {id:4,customerId:3,name:'Maria Schmidt',role:'Art Director',email:'m.schmidt@kreativ.de',phone:'+49 30 556677',initials:'MS',color:'#D97706',lastContact:'2026-05-06'},
+  {id:5,customerId:4,name:'Klaus Berger',role:'CEO',email:'k.berger@mediahouse.de',phone:'+49 30 112233',initials:'KB',color:'#DC2626',lastContact:'2026-04-10'},
+  {id:6,customerId:5,name:'Anna Weber',role:'Marketing Leiterin',email:'a.weber@marketingwerk.de',phone:'+49 89 334455',initials:'AW',color:'#0284C7',lastContact:'2026-05-07'},
+  {id:7,customerId:6,name:'Tom Schneider',role:'Gründer',email:'t.schneider@digitalspark.de',phone:'+49 40 667788',initials:'TS2',color:'#DB2777',lastContact:'2026-05-05'},
+  {id:8,customerId:7,name:'Julia Braun',role:'Brand Manager',email:'j.braun@brandforce.de',phone:'+49 69 778899',initials:'JB',color:'#6D28D9',lastContact:'2026-04-25'},
+  {id:9,customerId:8,name:'Markus Klein',role:'Geschäftsführer',email:'m.klein@pixelwerk.de',phone:'+49 221 889900',initials:'MK',color:'#059669',lastContact:'2026-05-08'},
+];
+
+const ACTIVITIES=[
+  {id:1,type:'system',customerId:1,text:'Kampagne "Social Ad Campaign" auf Abgeschlossen gesetzt',user:'Johannes Runnebaum',initials:'JR',color:'#F59E0B',date:'2026-05-08',time:'14:23'},
+  {id:2,type:'email',customerId:5,text:'Renewal-E-Mail für 2027 gesendet',user:'CS Team',initials:'CS',color:'#7C3AED',date:'2026-05-07',time:'10:15'},
+  {id:3,type:'call',customerId:2,text:'Checkout-Call – Nutzung besprochen, Reaktivierung offen',user:'Sarah Mueller',initials:'SM',color:'#059669',date:'2026-05-06',time:'11:00'},
+  {id:4,type:'note',customerId:4,text:'Kunde antwortet nicht – Churn-Risiko sehr hoch',user:'Max Richter',initials:'MR',color:'#DC2626',date:'2026-05-05',time:'16:40'},
+  {id:5,type:'system',customerId:8,text:'Onboarding abgeschlossen – alle 4 Schritte erledigt',user:'System',initials:'SY',color:'#059669',date:'2026-05-03',time:'09:00'},
+  {id:6,type:'email',customerId:7,text:'Renewal-Erinnerung versendet (52 Tage)',user:'CS Team',initials:'CS',color:'#7C3AED',date:'2026-05-02',time:'08:30'},
+  {id:7,type:'call',customerId:3,text:'QBR-Call – NPS 8, Upsell auf Business besprochen',user:'Sarah Mueller',initials:'SM',color:'#059669',date:'2026-05-01',time:'13:00'},
+  {id:8,type:'note',customerId:1,text:'Feature-Wunsch: Kalender-Integration für Q3',user:'Johannes Runnebaum',initials:'JR',color:'#F59E0B',date:'2026-04-30',time:'15:45'},
+];
+
+const ONBOARDING_PHASES=['Neu','Kickoff geplant','Setup läuft','Training','Abgeschlossen'];
+const ONBOARDING_DATA=[
+  {id:1,customerId:1,phase:'Abgeschlossen',steps:[{name:'Kickoff-Call',done:true},{name:'Setup-Check',done:true},{name:'Training',done:true},{name:'30-Tage-Review',done:true}]},
+  {id:2,customerId:8,phase:'Abgeschlossen',steps:[{name:'Kickoff-Call',done:true},{name:'Setup-Check',done:true},{name:'Training',done:true},{name:'30-Tage-Review',done:true}]},
+  {id:3,customerId:5,phase:'Training',steps:[{name:'Kickoff-Call',done:true},{name:'Setup-Check',done:true},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+  {id:4,customerId:3,phase:'Setup läuft',steps:[{name:'Kickoff-Call',done:true},{name:'Setup-Check',done:false},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+  {id:5,customerId:6,phase:'Kickoff geplant',steps:[{name:'Kickoff-Call',done:false},{name:'Setup-Check',done:false},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+  {id:6,customerId:2,phase:'Neu',steps:[{name:'Kickoff-Call',done:false},{name:'Setup-Check',done:false},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+  {id:7,customerId:7,phase:'Neu',steps:[{name:'Kickoff-Call',done:false},{name:'Setup-Check',done:false},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+  {id:8,customerId:4,phase:'Kickoff geplant',steps:[{name:'Kickoff-Call',done:false},{name:'Setup-Check',done:false},{name:'Training',done:false},{name:'30-Tage-Review',done:false}]},
+];
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function daysUntil(dateStr){
+  const d=new Date(dateStr), now=new Date('2026-05-08');
+  return Math.ceil((d-now)/(1000*60*60*24));
+}
+function formatDate(str){
+  const d=new Date(str);
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function healthColor(h){
+  if(h>=70) return C.green;
+  if(h>=40) return C.orange;
+  return C.red;
+}
+function healthBg(h){
+  if(h>=70) return C.greenLight;
+  if(h>=40) return C.orangeLight;
+  return C.redLight;
+}
+function healthLabel(h){
+  if(h>=70) return 'Gesund';
+  if(h>=40) return 'Neutral';
+  return 'Gefährdet';
+}
+
+// ─── ICONS ────────────────────────────────────────────────────
+const Icon={
+  dashboard:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+  kunden:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  kontakte:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  health:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+  onboarding:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+  renewals:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  komm:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  berichte:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  settings:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  help:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  bell:()=><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  search:()=><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  chevronDown:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>,
+  chevronRight:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>,
+  arrowLeft:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+  email:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+  phone:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.18 6.18l1.26-1.34a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  plus:()=><svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  filter:()=><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  note:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  warning:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  trends:()=><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+};
+
+// ─── AVATAR ───────────────────────────────────────────────────
+function Avatar({initials,color,size=32}){
+  return(
+    <div style={{width:size,height:size,borderRadius:'50%',background:color,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*0.33,fontWeight:600,flexShrink:0}}>
+      {initials.slice(0,2)}
+    </div>
+  );
+}
+
+// ─── STATUS BADGE ─────────────────────────────────────────────
+function Badge({label,color,bg}){
+  return(
+    <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:12,fontWeight:600,color,background:bg}}>
+      {label}
+    </span>
+  );
+}
+
+function StatusBadge({status}){
+  if(status==='Aktiv') return <Badge label="Aktiv" color={C.green} bg={C.greenLight}/>;
+  if(status==='Gefährdet') return <Badge label="Gefährdet" color={C.red} bg={C.redLight}/>;
+  return <Badge label={status} color={C.text2} bg={C.bg}/>;
+}
+
+function PlanBadge({plan}){
+  const map={Pro:[C.purple,C.purpleLight],Business:[C.blue,C.blueLight],Starter:[C.text2,'#F0F0F0']};
+  const [c,bg]=map[plan]||[C.text2,'#F0F0F0'];
+  return <Badge label={plan} color={c} bg={bg}/>;
+}
+
+// ─── HEALTH BAR ───────────────────────────────────────────────
+function HealthBar({score,showLabel=false,width=100}){
+  const col=healthColor(score);
+  return(
+    <div style={{display:'flex',alignItems:'center',gap:8}}>
+      <div style={{width,height:6,borderRadius:3,background:C.border,overflow:'hidden'}}>
+        <div style={{width:`${score}%`,height:'100%',background:col,borderRadius:3,transition:'width .3s'}}/>
+      </div>
+      <span style={{fontSize:12,fontWeight:600,color:col,minWidth:24}}>{score}</span>
+      {showLabel&&<span style={{fontSize:11,color:col}}>{healthLabel(score)}</span>}
+    </div>
+  );
+}
+
+// ─── CARD ─────────────────────────────────────────────────────
+function Card({children,style={},onClick}){
+  return(
+    <div onClick={onClick} style={{background:C.white,borderRadius:12,border:`1px solid ${C.border}`,padding:20,cursor:onClick?'pointer':undefined,...style}}>
+      {children}
+    </div>
+  );
+}
+
+// ─── KPI CARD ─────────────────────────────────────────────────
+function KpiCard({label,value,sub,icon,accent}){
+  return(
+    <Card style={{minWidth:0}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+        <span style={{fontSize:12,color:C.text2,fontWeight:500}}>{label}</span>
+        {icon&&<div style={{width:32,height:32,borderRadius:8,background:accent||C.bg,display:'flex',alignItems:'center',justifyContent:'center',color:C.text2}}>{icon}</div>}
+      </div>
+      <div style={{fontSize:28,fontWeight:700,letterSpacing:'-1px',lineHeight:1}}>{value}</div>
+      {sub&&<div style={{fontSize:12,color:C.text2,marginTop:6}}>{sub}</div>}
+    </Card>
+  );
+}
+
+// ─── TOP BAR ──────────────────────────────────────────────────
+function TopBar({title,onBack,backLabel}){
+  return(
+    <div style={{height:56,background:C.white,borderBottom:`1px solid ${C.border}`,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px',flexShrink:0}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        {onBack&&(
+          <button onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,color:C.text2,fontWeight:500,fontSize:13,padding:'6px 10px',borderRadius:7,background:'transparent'}} onMouseEnter={e=>e.target.style.background=C.bg} onMouseLeave={e=>e.target.style.background='transparent'}>
+            <Icon.arrowLeft/>{backLabel||'Zurück'}
+          </button>
+        )}
+        <h1 style={{fontSize:15,fontWeight:700}}>{title}</h1>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,background:C.bg,borderRadius:8,padding:'7px 13px',width:220}}>
+          <Icon.search/>
+          <input placeholder="Suchen..." style={{border:'none',background:'transparent',outline:'none',width:'100%',color:C.text,fontSize:13}} />
+        </div>
+        <div style={{position:'relative'}}>
+          <button style={{display:'flex',alignItems:'center',padding:8,borderRadius:8,color:C.text2}} onMouseEnter={e=>e.currentTarget.style.background=C.bg} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+            <Icon.bell/>
+          </button>
+          <span style={{position:'absolute',top:4,right:4,width:9,height:9,borderRadius:'50%',background:C.red,border:`2px solid ${C.white}`}}/>
+        </div>
+        <div style={{width:34,height:34,borderRadius:'50%',background:'#F59E0B',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,cursor:'pointer'}}>JR</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SIDEBAR ──────────────────────────────────────────────────
+const NAV=[
+  {id:'dashboard',label:'Dashboard',Icon:Icon.dashboard},
+  {id:'kunden',label:'Kunden',Icon:Icon.kunden},
+  {id:'kontakte',label:'Kontakte',Icon:Icon.kontakte},
+  {id:'health',label:'Health Scores',Icon:Icon.health},
+  {id:'onboarding',label:'Onboarding',Icon:Icon.onboarding},
+  {id:'renewals',label:'Renewals',Icon:Icon.renewals},
+  {id:'kommunikation',label:'Kommunikation',Icon:Icon.komm},
+  {id:'berichte',label:'Berichte',Icon:Icon.berichte},
+];
+const NAV2=[
+  {id:'einstellungen',label:'Einstellungen',Icon:Icon.settings},
+  {id:'hilfe',label:'Hilfe & Support',Icon:Icon.help},
+];
+
+function Sidebar({view,setView}){
+  const atRisk=CUSTOMERS.filter(c=>c.status==='Gefährdet').length;
+  return(
+    <div style={{width:220,background:C.white,borderRight:`1px solid ${C.border}`,display:'flex',flexDirection:'column',flexShrink:0,height:'100vh',overflow:'hidden'}}>
+      {/* Logo */}
+      <div style={{padding:'20px 16px 8px',flexShrink:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
+          <div style={{width:28,height:28,background:'#1A1A1A',borderRadius:7,display:'grid',gridTemplateColumns:'1fr 1fr',gap:2.5,padding:5}}>
+            {[0,1,2,3].map(i=><div key={i} style={{background:C.lime,borderRadius:1.5}}/>)}
+          </div>
+          <span style={{fontWeight:700,fontSize:16,letterSpacing:'-0.3px'}}>Mpilot CRM</span>
+        </div>
+        {/* Workspace */}
+        <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',background:C.bg,borderRadius:8,cursor:'pointer'}}>
+          <div style={{width:22,height:22,borderRadius:5,background:'#7C3AED',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span style={{fontSize:13,fontWeight:600,flex:1}}>Aufwind GmbH</span>
+          <Icon.chevronDown/>
+        </div>
+      </div>
+      {/* Nav */}
+      <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
+        {NAV.map(({id,label,Icon:Ico})=>{
+          const active=view===id;
+          const isHealth=id==='health';
+          return(
+            <button key={id} onClick={()=>setView(id)}
+              style={{display:'flex',alignItems:'center',gap:9,width:'100%',padding:'8px 10px',borderRadius:8,marginBottom:1,fontWeight:active?600:400,fontSize:13,color:active?C.text:C.text2,background:active?C.lime:'transparent',textAlign:'left',position:'relative',transition:'background .15s'}}>
+              <Ico/>
+              {label}
+              {isHealth&&atRisk>0&&<span style={{marginLeft:'auto',background:C.red,color:'#fff',borderRadius:20,fontSize:10,fontWeight:700,padding:'1px 7px'}}>{atRisk}</span>}
+            </button>
+          );
+        })}
+      </nav>
+      {/* Bottom Nav */}
+      <div style={{padding:'8px 10px 16px',borderTop:`1px solid ${C.border}`}}>
+        {NAV2.map(({id,label,Icon:Ico})=>(
+          <button key={id} onClick={()=>setView(id)}
+            style={{display:'flex',alignItems:'center',gap:9,width:'100%',padding:'8px 10px',borderRadius:8,marginBottom:1,fontWeight:400,fontSize:13,color:C.text2,background:'transparent',textAlign:'left'}}>
+            <Ico/>{label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────
+function Dashboard({setView,setSelectedId}){
+  const totalMrr=CUSTOMERS.reduce((s,c)=>s+c.mrr,0);
+  const aktive=CUSTOMERS.filter(c=>c.status==='Aktiv').length;
+  const gefaehrdet=CUSTOMERS.filter(c=>c.status==='Gefährdet').length;
+  const avgHealth=Math.round(CUSTOMERS.reduce((s,c)=>s+c.health,0)/CUSTOMERS.length);
+  const renewalSoon=CUSTOMERS.filter(c=>daysUntil(c.renewal)<=60).length;
+
+  const today=new Date('2026-05-08');
+  const dayName=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][today.getDay()];
+  const dayStr=today.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
+
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{fontSize:24,fontWeight:700,marginBottom:24,letterSpacing:'-0.5px'}}>Guten Morgen! 👋</div>
+
+      {/* Date + MRR row */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:16,marginBottom:16}}>
+        <Card>
+          <div style={{fontSize:12,color:C.purple,fontWeight:600,marginBottom:4}}>{dayName}</div>
+          <div style={{fontSize:24,fontWeight:700,letterSpacing:'-0.5px'}}>{dayStr}</div>
+          <div style={{marginTop:12}}>
+            <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>HEUTE FÄLLIG</div>
+            {CUSTOMERS.filter(c=>{const d=daysUntil(c.renewal);return d<=0}).length===0?(
+              <div style={{fontSize:12,color:C.text3,fontStyle:'italic'}}>Keine Renewals heute</div>
+            ):(
+              CUSTOMERS.filter(c=>daysUntil(c.renewal)===0).map(c=>(
+                <div key={c.id} style={{fontSize:12,color:C.text,fontWeight:500,background:C.redLight,padding:'4px 10px',borderRadius:6,display:'inline-block'}}>{c.name}</div>
+              ))
+            )}
+          </div>
+        </Card>
+        <KpiCard label="Gesamt MRR" value={`${totalMrr.toLocaleString('de-DE')} €`} sub={`${CUSTOMERS.length} aktive Verträge`} icon={<Icon.trends/>} accent="#FEF9C3"/>
+        <KpiCard label="Ø Health Score" value={avgHealth} sub={`${gefaehrdet} Kunden gefährdet`} icon={<Icon.health/>} accent={avgHealth>=70?C.greenLight:C.orangeLight}/>
+        <KpiCard label="Renewals (60 Tage)" value={renewalSoon} sub="Erfordern Aufmerksamkeit" icon={<Icon.renewals/>} accent={renewalSoon>2?C.redLight:C.orangeLight}/>
+      </div>
+
+      {/* Second row */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:16}}>
+        <KpiCard label="Aktive Kunden" value={aktive} sub={`von ${CUSTOMERS.length} gesamt`} icon={<Icon.kunden/>} accent={C.greenLight}/>
+        <KpiCard label="Gefährdete Kunden" value={gefaehrdet} sub="Health Score < 50" icon={<Icon.warning/>} accent={C.redLight}/>
+        <KpiCard label="Ø NPS Score" value={(CUSTOMERS.reduce((s,c)=>s+c.nps,0)/CUSTOMERS.length).toFixed(1)} sub="Net Promoter Score" icon={<Icon.health/>} accent={C.blueLight}/>
+      </div>
+
+      {/* Health + Activities */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* Health overview */}
+        <Card>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <span style={{fontWeight:700,fontSize:14}}>Health Score Übersicht</span>
+            <button onClick={()=>setView('health')} style={{fontSize:12,color:C.purple,fontWeight:600,padding:'4px 10px',borderRadius:6,background:C.purpleLight}}>Alle ansehen</button>
+          </div>
+          {[...CUSTOMERS].sort((a,b)=>a.health-b.health).map(c=>(
+            <div key={c.id} onClick={()=>{setSelectedId(c.id);setView('kunden-detail');}} style={{display:'flex',alignItems:'center',gap:12,padding:'8px 0',borderBottom:`1px solid ${C.border}`,cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='#FAFAFA'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <Avatar initials={c.initials} color={c.color} size={28}/>
+              <span style={{fontSize:13,fontWeight:500,flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.name}</span>
+              <HealthBar score={c.health} width={80}/>
+            </div>
+          ))}
+        </Card>
+        {/* Recent Activities */}
+        <Card>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <span style={{fontWeight:700,fontSize:14}}>Letzte Aktivitäten</span>
+            <button onClick={()=>setView('kommunikation')} style={{fontSize:12,color:C.purple,fontWeight:600,padding:'4px 10px',borderRadius:6,background:C.purpleLight}}>Alle ansehen</button>
+          </div>
+          {ACTIVITIES.map(a=>{
+            const cust=CUSTOMERS.find(c=>c.id===a.customerId);
+            const typeColor={email:C.blue,call:C.green,note:C.orange,system:C.text2}[a.type];
+            const typeIcon={email:<Icon.email/>,call:<Icon.phone/>,note:<Icon.note/>,system:<Icon.trends/>}[a.type];
+            return(
+              <div key={a.id} style={{display:'flex',gap:10,padding:'10px 0',borderBottom:`1px solid ${C.border}`}}>
+                <Avatar initials={a.initials} color={a.color} size={30}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:500,lineHeight:1.4,color:C.text}}>{a.text}</div>
+                  <div style={{display:'flex',gap:8,marginTop:4,alignItems:'center'}}>
+                    <span style={{fontSize:11,color:typeColor,display:'flex',alignItems:'center',gap:3}}>{typeIcon}{a.type}</span>
+                    <span style={{fontSize:11,color:C.text3}}>·</span>
+                    <span style={{fontSize:11,color:C.text2,fontWeight:500}}>{cust?.name}</span>
+                    <span style={{fontSize:11,color:C.text3}}>· {a.date.split('-').reverse().join('.')}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── KUNDEN LIST ──────────────────────────────────────────────
+function KundenList({setView,setSelectedId}){
+  const [search,setSearch]=useState('');
+  const [filter,setFilter]=useState('Alle');
+  const filtered=CUSTOMERS.filter(c=>{
+    const matchSearch=c.name.toLowerCase().includes(search.toLowerCase())||c.industry.toLowerCase().includes(search.toLowerCase());
+    const matchFilter=filter==='Alle'||c.status===filter;
+    return matchSearch&&matchFilter;
+  });
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <div>
+          <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Kunden</h2>
+          <p style={{color:C.text2,fontSize:13,marginTop:2}}>{CUSTOMERS.length} Kunden insgesamt · {CUSTOMERS.reduce((s,c)=>s+c.mrr,0).toLocaleString('de-DE')} € MRR</p>
+        </div>
+        <button style={{display:'flex',alignItems:'center',gap:7,padding:'9px 16px',background:'#1A1A1A',color:'#fff',borderRadius:8,fontWeight:600,fontSize:13}}>
+          <Icon.plus/>Kunde hinzufügen
+        </button>
+      </div>
+      {/* Filters */}
+      <div style={{display:'flex',gap:10,marginBottom:16,alignItems:'center'}}>
+        <div style={{display:'flex',alignItems:'center',gap:7,background:C.white,border:`1px solid ${C.border}`,borderRadius:8,padding:'7px 12px',flex:1,maxWidth:280}}>
+          <Icon.search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Kunden durchsuchen..." style={{border:'none',outline:'none',background:'transparent',fontSize:13,width:'100%'}}/>
+        </div>
+        {['Alle','Aktiv','Gefährdet'].map(f=>(
+          <button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 14px',borderRadius:8,border:`1px solid ${filter===f?'#1A1A1A':C.border}`,background:filter===f?'#1A1A1A':C.white,color:filter===f?'#fff':C.text,fontWeight:filter===f?600:400,fontSize:13}}>
+            {f}
+          </button>
+        ))}
+      </div>
+      {/* Table */}
+      <Card style={{padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{borderBottom:`1px solid ${C.border}`,background:'#FAFAFA'}}>
+              {['Kunde','Plan','MRR','Health Score','Status','Letzter Login','Renewal',''].map(h=>(
+                <th key={h} style={{padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:600,color:C.text2,letterSpacing:'0.3px',whiteSpace:'nowrap'}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(c=>(
+              <tr key={c.id} onClick={()=>{setSelectedId(c.id);setView('kunden-detail');}} style={{borderBottom:`1px solid ${C.border}`,cursor:'pointer',transition:'background .1s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#FAFAFA'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <td style={{padding:'12px 16px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <Avatar initials={c.initials} color={c.color} size={32}/>
+                    <div>
+                      <div style={{fontWeight:600,fontSize:13}}>{c.name}</div>
+                      <div style={{fontSize:11,color:C.text2}}>{c.industry} · {c.users} Nutzer</div>
+                    </div>
+                  </div>
+                </td>
+                <td style={{padding:'12px 16px'}}><PlanBadge plan={c.plan}/></td>
+                <td style={{padding:'12px 16px',fontWeight:700,fontSize:13}}>{c.mrr} €</td>
+                <td style={{padding:'12px 16px'}}><HealthBar score={c.health} width={80}/></td>
+                <td style={{padding:'12px 16px'}}><StatusBadge status={c.status}/></td>
+                <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{formatDate(c.lastLogin)}</td>
+                <td style={{padding:'12px 16px'}}>
+                  <div style={{fontSize:12}}>
+                    <div style={{fontWeight:500}}>{formatDate(c.renewal)}</div>
+                    <div style={{color:daysUntil(c.renewal)<=60?C.red:daysUntil(c.renewal)<=90?C.orange:C.text2,fontSize:11,marginTop:1}}>
+                      {daysUntil(c.renewal)} Tage
+                    </div>
+                  </div>
+                </td>
+                <td style={{padding:'12px 16px'}}>
+                  <Icon.chevronRight/>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ─── KUNDE DETAIL ─────────────────────────────────────────────
+function KundeDetail({id,setView}){
+  const [tab,setTab]=useState('overview');
+  const c=CUSTOMERS.find(x=>x.id===id);
+  if(!c) return null;
+  const contacts=CONTACTS.filter(x=>x.customerId===id);
+  const activities=ACTIVITIES.filter(x=>x.customerId===id);
+  const onboarding=ONBOARDING_DATA.find(x=>x.customerId===id);
+  const daysLeft=daysUntil(c.renewal);
+
+  const tabs=[{id:'overview',label:'Übersicht'},{id:'contacts',label:`Kontakte (${contacts.length})`},{id:'activities',label:'Aktivitäten'},{id:'onboarding',label:'Onboarding'}];
+
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
+        <Avatar initials={c.initials} color={c.color} size={52}/>
+        <div style={{flex:1}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+            <h2 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.5px'}}>{c.name}</h2>
+            <StatusBadge status={c.status}/>
+            <PlanBadge plan={c.plan}/>
+          </div>
+          <div style={{fontSize:13,color:C.text2}}>{c.industry} · {c.users} Nutzer · {c.campaigns} Kampagnen · {c.projects} Projekte</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button style={{padding:'8px 16px',border:`1px solid ${C.border}`,borderRadius:8,fontWeight:500,fontSize:13,background:C.white}}>Notiz hinzufügen</button>
+          <button style={{padding:'8px 16px',background:'#1A1A1A',color:'#fff',borderRadius:8,fontWeight:600,fontSize:13}}>Aktivität loggen</button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:20}}>
+        <Card style={{padding:'14px 16px'}}>
+          <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>MRR</div>
+          <div style={{fontSize:22,fontWeight:700}}>{c.mrr} €</div>
+        </Card>
+        <Card style={{padding:'14px 16px'}}>
+          <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>HEALTH SCORE</div>
+          <div style={{fontSize:22,fontWeight:700,color:healthColor(c.health)}}>{c.health}</div>
+          <div style={{fontSize:11,color:healthColor(c.health)}}>{healthLabel(c.health)}</div>
+        </Card>
+        <Card style={{padding:'14px 16px'}}>
+          <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>NPS</div>
+          <div style={{fontSize:22,fontWeight:700,color:c.nps>=8?C.green:c.nps>=6?C.orange:C.red}}>{c.nps}/10</div>
+        </Card>
+        <Card style={{padding:'14px 16px'}}>
+          <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>RENEWAL</div>
+          <div style={{fontSize:15,fontWeight:700}}>{formatDate(c.renewal)}</div>
+          <div style={{fontSize:11,color:daysLeft<=60?C.red:daysLeft<=90?C.orange:C.green}}>{daysLeft} Tage</div>
+        </Card>
+        <Card style={{padding:'14px 16px'}}>
+          <div style={{fontSize:11,color:C.text2,fontWeight:500,marginBottom:6}}>LETZTER LOGIN</div>
+          <div style={{fontSize:15,fontWeight:700}}>{formatDate(c.lastLogin)}</div>
+          <div style={{fontSize:11,color:C.text2}}>{c.users} aktive Nutzer</div>
+        </Card>
+      </div>
+
+      {/* Health bar */}
+      <Card style={{marginBottom:20,padding:'16px 20px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+          <span style={{fontWeight:600,fontSize:13}}>Health Score</span>
+          <span style={{fontWeight:700,color:healthColor(c.health)}}>{healthLabel(c.health)}</span>
+        </div>
+        <div style={{width:'100%',height:10,background:C.bg,borderRadius:5,overflow:'hidden'}}>
+          <div style={{width:`${c.health}%`,height:'100%',background:healthColor(c.health),borderRadius:5}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:6,fontSize:11,color:C.text3}}>
+          <span>0 – Kritisch</span><span>50 – Neutral</span><span>100 – Optimal</span>
+        </div>
+      </Card>
+
+      {/* Tabs */}
+      <div style={{display:'flex',gap:2,marginBottom:16,borderBottom:`1px solid ${C.border}`,paddingBottom:0}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'8px 16px',fontWeight:tab===t.id?700:400,fontSize:13,color:tab===t.id?C.text:C.text2,borderBottom:tab===t.id?`2px solid #1A1A1A`:'2px solid transparent',marginBottom:-1,background:'transparent'}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab==='overview'&&(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <Card>
+            <div style={{fontWeight:700,fontSize:14,marginBottom:14}}>Vertragsdetails</div>
+            {[['Plan',<PlanBadge plan={c.plan}/>],['MRR',`${c.mrr} €/Monat`],['ARR',`${c.mrr*12} €/Jahr`],['Renewal',formatDate(c.renewal)],['Branche',c.industry],['Nutzer',`${c.users} Nutzer`]].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:`1px solid ${C.border}`,fontSize:13}}>
+                <span style={{color:C.text2}}>{k}</span>
+                <span style={{fontWeight:500}}>{v}</span>
+              </div>
+            ))}
+          </Card>
+          <Card>
+            <div style={{fontWeight:700,fontSize:14,marginBottom:14}}>Nutzung</div>
+            {[['Kampagnen',c.campaigns],['Projekte',c.projects],['Aktive Nutzer',c.users],['Letzter Login',formatDate(c.lastLogin)]].map(([k,v])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:`1px solid ${C.border}`,fontSize:13}}>
+                <span style={{color:C.text2}}>{k}</span>
+                <span style={{fontWeight:600}}>{v}</span>
+              </div>
+            ))}
+            {c.health<50&&(
+              <div style={{marginTop:14,padding:'10px 14px',background:C.redLight,borderRadius:8,fontSize:12,color:C.red,fontWeight:500}}>
+                ⚠️ Niedrige Nutzungsrate – Churn-Risiko! Bitte Kontakt aufnehmen.
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {tab==='contacts'&&(
+        <Card style={{padding:0,overflow:'hidden'}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{borderBottom:`1px solid ${C.border}`,background:'#FAFAFA'}}>
+                {['Name','Rolle','E-Mail','Telefon','Letzter Kontakt'].map(h=>(
+                  <th key={h} style={{padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:600,color:C.text2}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {contacts.map(ct=>(
+                <tr key={ct.id} style={{borderBottom:`1px solid ${C.border}`}}>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <Avatar initials={ct.initials} color={ct.color} size={28}/>
+                      <span style={{fontWeight:500,fontSize:13}}>{ct.name}</span>
+                    </div>
+                  </td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{ct.role}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.purple}}>{ct.email}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{ct.phone}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{formatDate(ct.lastContact)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+
+      {tab==='activities'&&(
+        <Card>
+          {activities.length===0?(
+            <div style={{textAlign:'center',color:C.text3,padding:32,fontSize:13}}>Noch keine Aktivitäten</div>
+          ):activities.map(a=>{
+            const typeColor={email:C.blue,call:C.green,note:C.orange,system:C.text2}[a.type];
+            return(
+              <div key={a.id} style={{display:'flex',gap:12,padding:'12px 0',borderBottom:`1px solid ${C.border}`}}>
+                <Avatar initials={a.initials} color={a.color} size={32}/>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:500,fontSize:13}}>{a.text}</div>
+                  <div style={{fontSize:11,color:C.text2,marginTop:3}}>{a.user} · <span style={{color:typeColor}}>{a.type}</span> · {a.date.split('-').reverse().join('.')} {a.time}</div>
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+      )}
+
+      {tab==='onboarding'&&onboarding&&(
+        <Card>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>Onboarding Status: <span style={{color:C.purple}}>{onboarding.phase}</span></div>
+          {onboarding.steps.map((s,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:`1px solid ${C.border}`}}>
+              <div style={{width:22,height:22,borderRadius:'50%',background:s.done?C.green:C.bg,border:`2px solid ${s.done?C.green:C.border}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                {s.done&&<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+              </div>
+              <span style={{fontSize:13,fontWeight:500,color:s.done?C.text:C.text2}}>{s.name}</span>
+              {s.done&&<span style={{fontSize:11,color:C.green,marginLeft:'auto'}}>Abgeschlossen</span>}
+              {!s.done&&<span style={{fontSize:11,color:C.text3,marginLeft:'auto'}}>Ausstehend</span>}
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── KONTAKTE ─────────────────────────────────────────────────
+function KontakteView({setView,setSelectedId}){
+  const [search,setSearch]=useState('');
+  const filtered=CONTACTS.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.role.toLowerCase().includes(search.toLowerCase()));
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <div>
+          <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Kontakte</h2>
+          <p style={{color:C.text2,fontSize:13,marginTop:2}}>{CONTACTS.length} Kontakte insgesamt</p>
+        </div>
+        <button style={{display:'flex',alignItems:'center',gap:7,padding:'9px 16px',background:'#1A1A1A',color:'#fff',borderRadius:8,fontWeight:600,fontSize:13}}>
+          <Icon.plus/>Kontakt hinzufügen
+        </button>
+      </div>
+      <div style={{display:'flex',gap:10,marginBottom:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:7,background:C.white,border:`1px solid ${C.border}`,borderRadius:8,padding:'7px 12px',flex:1,maxWidth:280}}>
+          <Icon.search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Kontakte suchen..." style={{border:'none',outline:'none',background:'transparent',fontSize:13,width:'100%'}}/>
+        </div>
+      </div>
+      <Card style={{padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{borderBottom:`1px solid ${C.border}`,background:'#FAFAFA'}}>
+              {['Name','Unternehmen','Rolle','E-Mail','Telefon','Letzter Kontakt'].map(h=>(
+                <th key={h} style={{padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:600,color:C.text2}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(ct=>{
+              const cust=CUSTOMERS.find(c=>c.id===ct.customerId);
+              return(
+                <tr key={ct.id} style={{borderBottom:`1px solid ${C.border}`,cursor:'pointer'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='#FAFAFA'}
+                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                  onClick={()=>{setSelectedId(ct.customerId);setView('kunden-detail');}}>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <Avatar initials={ct.initials} color={ct.color} size={32}/>
+                      <span style={{fontWeight:600,fontSize:13}}>{ct.name}</span>
+                    </div>
+                  </td>
+                  <td style={{padding:'12px 16px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}>
+                      <Avatar initials={cust?.initials||'?'} color={cust?.color||C.text2} size={20}/>
+                      <span>{cust?.name}</span>
+                    </div>
+                  </td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{ct.role}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.purple}}>{ct.email}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{ct.phone}</td>
+                  <td style={{padding:'12px 16px',fontSize:12,color:C.text2}}>{formatDate(ct.lastContact)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ─── HEALTH SCORES ────────────────────────────────────────────
+function HealthView({setView,setSelectedId}){
+  const sorted=[...CUSTOMERS].sort((a,b)=>a.health-b.health);
+  const gesund=CUSTOMERS.filter(c=>c.health>=70).length;
+  const neutral=CUSTOMERS.filter(c=>c.health>=40&&c.health<70).length;
+  const gefaehrdet=CUSTOMERS.filter(c=>c.health<40).length;
+
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Health Scores</h2>
+        <p style={{color:C.text2,fontSize:13,marginTop:2}}>Überwache die Gesundheit deiner Kunden in Echtzeit</p>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:24}}>
+        <Card style={{borderLeft:`4px solid ${C.green}`,padding:'16px 20px'}}>
+          <div style={{fontSize:11,color:C.green,fontWeight:700,marginBottom:4}}>GESUND (≥70)</div>
+          <div style={{fontSize:32,fontWeight:700,color:C.green}}>{gesund}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:4}}>Health Score über 70</div>
+        </Card>
+        <Card style={{borderLeft:`4px solid ${C.orange}`,padding:'16px 20px'}}>
+          <div style={{fontSize:11,color:C.orange,fontWeight:700,marginBottom:4}}>NEUTRAL (40–69)</div>
+          <div style={{fontSize:32,fontWeight:700,color:C.orange}}>{neutral}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:4}}>Beobachten & unterstützen</div>
+        </Card>
+        <Card style={{borderLeft:`4px solid ${C.red}`,padding:'16px 20px'}}>
+          <div style={{fontSize:11,color:C.red,fontWeight:700,marginBottom:4}}>GEFÄHRDET (&lt;40)</div>
+          <div style={{fontSize:32,fontWeight:700,color:C.red}}>{gefaehrdet}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:4}}>Sofort Maßnahmen ergreifen!</div>
+        </Card>
+      </div>
+
+      <Card style={{padding:0,overflow:'hidden'}}>
+        <div style={{padding:'14px 20px',borderBottom:`1px solid ${C.border}`,fontWeight:700,fontSize:14}}>Alle Kunden nach Health Score</div>
+        {sorted.map(c=>{
+          const col=healthColor(c.health);
+          const bg=healthBg(c.health);
+          return(
+            <div key={c.id} onClick={()=>{setSelectedId(c.id);setView('kunden-detail');}}
+              style={{display:'flex',alignItems:'center',gap:16,padding:'14px 20px',borderBottom:`1px solid ${C.border}`,cursor:'pointer'}}
+              onMouseEnter={e=>e.currentTarget.style.background='#FAFAFA'}
+              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+              <Avatar initials={c.initials} color={c.color} size={38}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:13,marginBottom:4}}>{c.name}</div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <HealthBar score={c.health} width={200} showLabel/>
+                </div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontSize:11,color:C.text2}}>{c.plan} · {c.mrr} €/mo</div>
+                <div style={{fontSize:11,color:C.text2,marginTop:2}}>Login: {formatDate(c.lastLogin)}</div>
+              </div>
+              <div style={{padding:'4px 12px',borderRadius:20,background:bg,color:col,fontWeight:700,fontSize:12,flexShrink:0}}>
+                {healthLabel(c.health)}
+              </div>
+              {c.health<40&&(
+                <button style={{padding:'6px 12px',background:C.red,color:'#fff',borderRadius:7,fontWeight:600,fontSize:12,flexShrink:0}}>
+                  Kontaktieren
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────
+function OnboardingView({setView,setSelectedId}){
+  const phases=ONBOARDING_PHASES;
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Onboarding Pipeline</h2>
+        <p style={{color:C.text2,fontSize:13,marginTop:2}}>Begleite jeden Kunden durch den Onboarding-Prozess</p>
+      </div>
+      <div style={{display:'flex',gap:14,overflowX:'auto',paddingBottom:12}}>
+        {phases.map(phase=>{
+          const cards=ONBOARDING_DATA.filter(o=>o.phase===phase);
+          const isLast=phase==='Abgeschlossen';
+          return(
+            <div key={phase} style={{minWidth:200,flex:'0 0 200px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+                <span style={{fontWeight:700,fontSize:13}}>{phase}</span>
+                <span style={{background:isLast?C.greenLight:C.bg,color:isLast?C.green:C.text2,borderRadius:20,padding:'1px 8px',fontSize:11,fontWeight:700}}>{cards.length}</span>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {cards.map(o=>{
+                  const cust=CUSTOMERS.find(c=>c.id===o.customerId);
+                  if(!cust) return null;
+                  const done=o.steps.filter(s=>s.done).length;
+                  const total=o.steps.length;
+                  return(
+                    <div key={o.id} onClick={()=>{setSelectedId(cust.id);setView('kunden-detail');}}
+                      style={{background:C.white,border:`1px solid ${C.border}`,borderRadius:10,padding:14,cursor:'pointer'}}
+                      onMouseEnter={e=>e.currentTarget.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'}
+                      onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                        <Avatar initials={cust.initials} color={cust.color} size={28}/>
+                        <span style={{fontWeight:600,fontSize:12,flex:1,lineHeight:1.3}}>{cust.name}</span>
+                      </div>
+                      <div style={{fontSize:11,color:C.text2,marginBottom:6}}>{done}/{total} Schritte</div>
+                      <div style={{width:'100%',height:4,background:C.bg,borderRadius:2,overflow:'hidden'}}>
+                        <div style={{width:`${(done/total)*100}%`,height:'100%',background:isLast?C.green:C.purple,borderRadius:2}}/>
+                      </div>
+                      <div style={{marginTop:8}}>
+                        <PlanBadge plan={cust.plan}/>
+                      </div>
+                    </div>
+                  );
+                })}
+                {cards.length===0&&(
+                  <div style={{border:`2px dashed ${C.border}`,borderRadius:10,padding:20,textAlign:'center',fontSize:12,color:C.text3}}>Keine Kunden</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── RENEWALS ─────────────────────────────────────────────────
+function RenewalsView({setView,setSelectedId}){
+  const sorted=[...CUSTOMERS].sort((a,b)=>daysUntil(a.renewal)-daysUntil(b.renewal));
+  const urgent=sorted.filter(c=>daysUntil(c.renewal)<=60);
+  const warning=sorted.filter(c=>daysUntil(c.renewal)>60&&daysUntil(c.renewal)<=120);
+  const ok=sorted.filter(c=>daysUntil(c.renewal)>120);
+
+  function RenewalRow({c}){
+    const days=daysUntil(c.renewal);
+    const col=days<=60?C.red:days<=120?C.orange:C.green;
+    const bg=days<=60?C.redLight:days<=120?C.orangeLight:C.greenLight;
+    return(
+      <tr onClick={()=>{setSelectedId(c.id);setView('kunden-detail');}} style={{borderBottom:`1px solid ${C.border}`,cursor:'pointer'}}
+        onMouseEnter={e=>e.currentTarget.style.background='#FAFAFA'}
+        onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+        <td style={{padding:'12px 16px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <Avatar initials={c.initials} color={c.color} size={32}/>
+            <div>
+              <div style={{fontWeight:600,fontSize:13}}>{c.name}</div>
+              <div style={{fontSize:11,color:C.text2}}>{c.industry}</div>
+            </div>
+          </div>
+        </td>
+        <td style={{padding:'12px 16px'}}><PlanBadge plan={c.plan}/></td>
+        <td style={{padding:'12px 16px',fontWeight:700,fontSize:13}}>{c.mrr} €</td>
+        <td style={{padding:'12px 16px',fontSize:13}}>{formatDate(c.renewal)}</td>
+        <td style={{padding:'12px 16px'}}>
+          <span style={{padding:'3px 10px',borderRadius:20,background:bg,color:col,fontWeight:700,fontSize:12}}>{days} Tage</span>
+        </td>
+        <td style={{padding:'12px 16px'}}>
+          <HealthBar score={c.health} width={80}/>
+        </td>
+        <td style={{padding:'12px 16px'}}>
+          {days<=60&&<button style={{padding:'5px 12px',background:C.red,color:'#fff',borderRadius:7,fontWeight:600,fontSize:11}}>Jetzt handeln</button>}
+          {days>60&&days<=120&&<button style={{padding:'5px 12px',background:C.orangeLight,color:C.orange,borderRadius:7,fontWeight:600,fontSize:11}}>Planen</button>}
+          {days>120&&<button style={{padding:'5px 12px',background:C.bg,color:C.text2,borderRadius:7,fontWeight:500,fontSize:11}}>Im Blick</button>}
+        </td>
+      </tr>
+    );
+  }
+
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Renewals</h2>
+        <p style={{color:C.text2,fontSize:13,marginTop:2}}>Vertragsmanagement und Renewal-Pipeline</p>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:24}}>
+        <Card style={{borderTop:`3px solid ${C.red}`,padding:'14px 18px'}}>
+          <div style={{fontSize:11,color:C.red,fontWeight:700,marginBottom:4}}>DRINGEND (&lt;60 Tage)</div>
+          <div style={{fontSize:28,fontWeight:700,color:C.red}}>{urgent.length}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:2}}>MRR: {urgent.reduce((s,c)=>s+c.mrr,0)} €</div>
+        </Card>
+        <Card style={{borderTop:`3px solid ${C.orange}`,padding:'14px 18px'}}>
+          <div style={{fontSize:11,color:C.orange,fontWeight:700,marginBottom:4}}>PLANUNG (60–120 Tage)</div>
+          <div style={{fontSize:28,fontWeight:700,color:C.orange}}>{warning.length}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:2}}>MRR: {warning.reduce((s,c)=>s+c.mrr,0)} €</div>
+        </Card>
+        <Card style={{borderTop:`3px solid ${C.green}`,padding:'14px 18px'}}>
+          <div style={{fontSize:11,color:C.green,fontWeight:700,marginBottom:4}}>GUT GEPLANT (&gt;120 Tage)</div>
+          <div style={{fontSize:28,fontWeight:700,color:C.green}}>{ok.length}</div>
+          <div style={{fontSize:12,color:C.text2,marginTop:2}}>MRR: {ok.reduce((s,c)=>s+c.mrr,0)} €</div>
+        </Card>
+      </div>
+      <Card style={{padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{borderBottom:`1px solid ${C.border}`,background:'#FAFAFA'}}>
+              {['Kunde','Plan','MRR','Renewal-Datum','Verbleibend','Health','Aktion'].map(h=>(
+                <th key={h} style={{padding:'11px 16px',textAlign:'left',fontSize:11,fontWeight:600,color:C.text2}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map(c=><RenewalRow key={c.id} c={c}/>)}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
+
+// ─── KOMMUNIKATION ────────────────────────────────────────────
+function KommunikationView({setView,setSelectedId}){
+  const [filter,setFilter]=useState('Alle');
+  const typeLabel={email:'E-Mail',call:'Anruf',note:'Notiz',system:'System'};
+  const typeColor={email:C.blue,call:C.green,note:C.orange,system:C.text2};
+  const typeIcon={email:<Icon.email/>,call:<Icon.phone/>,note:<Icon.note/>,system:<Icon.trends/>};
+
+  const filtered=ACTIVITIES.filter(a=>filter==='Alle'||a.type===filter);
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Kommunikation</h2>
+        <p style={{color:C.text2,fontSize:13,marginTop:2}}>Alle Aktivitäten und Interaktionen mit deinen Kunden</p>
+      </div>
+      <div style={{display:'flex',gap:8,marginBottom:18}}>
+        {['Alle','email','call','note','system'].map(f=>{
+          const active=filter===f;
+          return(
+            <button key={f} onClick={()=>setFilter(f)} style={{padding:'7px 14px',borderRadius:8,border:`1px solid ${active?'#1A1A1A':C.border}`,background:active?'#1A1A1A':C.white,color:active?'#fff':C.text2,fontWeight:active?600:400,fontSize:12,display:'flex',alignItems:'center',gap:5}}>
+              {f!=='Alle'&&<span style={{color:active?'#fff':typeColor[f]}}>{typeIcon[f]}</span>}
+              {f==='Alle'?'Alle':typeLabel[f]}
+            </button>
+          );
+        })}
+        <button style={{marginLeft:'auto',padding:'7px 14px',border:`1px solid ${C.border}`,borderRadius:8,fontWeight:500,fontSize:12,background:C.white,display:'flex',alignItems:'center',gap:5,color:C.text2}}>
+          <Icon.plus/>Aktivität loggen
+        </button>
+      </div>
+      <Card>
+        {filtered.map((a,i)=>{
+          const cust=CUSTOMERS.find(c=>c.id===a.customerId);
+          const col=typeColor[a.type];
+          return(
+            <div key={a.id} style={{display:'flex',gap:14,padding:'14px 0',borderBottom:i<filtered.length-1?`1px solid ${C.border}`:'none'}}>
+              <Avatar initials={a.initials} color={a.color} size={38}/>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                  <span style={{fontWeight:600,fontSize:13}}>{a.user}</span>
+                  <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,color:col,background:col+'22',padding:'2px 8px',borderRadius:20,fontWeight:600}}>
+                    {typeIcon[a.type]}{typeLabel[a.type]}
+                  </span>
+                  <span style={{fontSize:11,color:C.text3}}>→</span>
+                  <button onClick={()=>{setSelectedId(cust?.id);setView('kunden-detail');}} style={{fontSize:11,color:C.purple,fontWeight:600}}>{cust?.name}</button>
+                </div>
+                <div style={{fontSize:13,color:C.text,lineHeight:1.5}}>{a.text}</div>
+                <div style={{fontSize:11,color:C.text3,marginTop:4}}>{a.date.split('-').reverse().join('.')} · {a.time} Uhr</div>
+              </div>
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
+// ─── BERICHTE ─────────────────────────────────────────────────
+function BerichteView(){
+  const totalMrr=CUSTOMERS.reduce((s,c)=>s+c.mrr,0);
+  const avgHealth=Math.round(CUSTOMERS.reduce((s,c)=>s+c.health,0)/CUSTOMERS.length);
+  const churnRisk=CUSTOMERS.filter(c=>c.status==='Gefährdet').length;
+  const churnRate=Math.round((churnRisk/CUSTOMERS.length)*100);
+
+  // Plan distribution
+  const planDist={Pro:0,Business:0,Starter:0};
+  CUSTOMERS.forEach(c=>planDist[c.plan]++);
+
+  // MRR by plan
+  const mrrByPlan={Pro:0,Business:0,Starter:0};
+  CUSTOMERS.forEach(c=>mrrByPlan[c.plan]+=c.mrr);
+
+  // Fake monthly MRR data
+  const months=['Jan','Feb','Mär','Apr','Mai'];
+  const mrrData=[2200,2499,2599,2794,2893];
+  const maxMrr=Math.max(...mrrData);
+
+  const healthDist=[
+    {label:'Gesund (70–100)',count:CUSTOMERS.filter(c=>c.health>=70).length,color:C.green},
+    {label:'Neutral (40–69)',count:CUSTOMERS.filter(c=>c.health>=40&&c.health<70).length,color:C.orange},
+    {label:'Gefährdet (0–39)',count:CUSTOMERS.filter(c=>c.health<40).length,color:C.red},
+  ];
+
+  return(
+    <div style={{padding:28,overflow:'auto',flex:1}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontWeight:700,fontSize:18,letterSpacing:'-0.3px'}}>Berichte & Analytics</h2>
+        <p style={{color:C.text2,fontSize:13,marginTop:2}}>Übersicht über dein Customer-Portfolio</p>
+      </div>
+
+      {/* Top KPIs */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+        <KpiCard label="Gesamt MRR" value={`${totalMrr.toLocaleString('de-DE')} €`} sub="+3.6% zum Vormonat"/>
+        <KpiCard label="ARR (Jahresumsatz)" value={`${(totalMrr*12).toLocaleString('de-DE')} €`} sub="Hochgerechnet"/>
+        <KpiCard label="Ø Health Score" value={avgHealth} sub={`${CUSTOMERS.length} Kunden`}/>
+        <KpiCard label="Churn-Risiko" value={`${churnRate}%`} sub={`${churnRisk} von ${CUSTOMERS.length} Kunden`}/>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        {/* MRR Chart */}
+        <Card>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>MRR Entwicklung</div>
+          <svg width="100%" height="160" viewBox="0 0 400 160">
+            {/* Grid lines */}
+            {[0,.25,.5,.75,1].map((t,i)=>(
+              <line key={i} x1="40" y1={140-t*120} x2="400" y2={140-t*120} stroke={C.border} strokeWidth="1"/>
+            ))}
+            {/* Area */}
+            <defs>
+              <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={C.lime} stopOpacity=".4"/>
+                <stop offset="100%" stopColor={C.lime} stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d={`M${mrrData.map((v,i)=>`${40+i*80},${140-(v/maxMrr)*120}`).join(' L')} L${40+(mrrData.length-1)*80},140 L40,140 Z`} fill="url(#mrrGrad)"/>
+            <polyline points={mrrData.map((v,i)=>`${40+i*80},${140-(v/maxMrr)*120}`).join(' ')} fill="none" stroke="#1A1A1A" strokeWidth="2.5" strokeLinejoin="round"/>
+            {mrrData.map((v,i)=>(
+              <circle key={i} cx={40+i*80} cy={140-(v/maxMrr)*120} r="4" fill="#1A1A1A"/>
+            ))}
+            {months.map((m,i)=>(
+              <text key={i} x={40+i*80} y="158" textAnchor="middle" fontSize="11" fill={C.text2}>{m}</text>
+            ))}
+            {mrrData.map((v,i)=>(
+              <text key={i} x={40+i*80} y={130-(v/maxMrr)*120} textAnchor="middle" fontSize="10" fill={C.text} fontWeight="600">{v}€</text>
+            ))}
+          </svg>
+        </Card>
+
+        {/* Health Distribution */}
+        <Card>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>Health Score Verteilung</div>
+          {healthDist.map(h=>(
+            <div key={h.label} style={{marginBottom:14}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}}>
+                <span style={{color:C.text2}}>{h.label}</span>
+                <span style={{fontWeight:700,color:h.color}}>{h.count} Kunden</span>
+              </div>
+              <div style={{width:'100%',height:8,background:C.bg,borderRadius:4,overflow:'hidden'}}>
+                <div style={{width:`${(h.count/CUSTOMERS.length)*100}%`,height:'100%',background:h.color,borderRadius:4}}/>
+              </div>
+            </div>
+          ))}
+          {/* Simple circles */}
+          <div style={{display:'flex',gap:12,marginTop:16}}>
+            {healthDist.map(h=>(
+              <div key={h.label} style={{flex:1,textAlign:'center',background:h.color+'18',borderRadius:10,padding:'12px 8px'}}>
+                <div style={{fontSize:24,fontWeight:700,color:h.color}}>{h.count}</div>
+                <div style={{fontSize:10,color:h.color,fontWeight:600,marginTop:2}}>{h.label.split(' ')[0]}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* Plan Distribution */}
+        <Card>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>Plan-Verteilung & MRR</div>
+          {Object.entries(planDist).map(([plan,count])=>{
+            const planColors={Pro:C.purple,Business:C.blue,Starter:C.text2};
+            const planBg={Pro:C.purpleLight,Business:C.blueLight,Starter:'#F0F0F0'};
+            return(
+              <div key={plan} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:`1px solid ${C.border}`}}>
+                <div style={{width:36,height:36,borderRadius:8,background:planBg[plan],display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <span style={{fontSize:11,fontWeight:700,color:planColors[plan]}}>{plan[0]}</span>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:600,fontSize:13}}>{plan}</div>
+                  <div style={{fontSize:11,color:C.text2}}>{count} Kunden · {mrrByPlan[plan]} €/mo</div>
+                </div>
+                <div style={{width:80,height:6,background:C.bg,borderRadius:3,overflow:'hidden'}}>
+                  <div style={{width:`${(count/CUSTOMERS.length)*100}%`,height:'100%',background:planColors[plan],borderRadius:3}}/>
+                </div>
+                <span style={{fontWeight:700,fontSize:13,minWidth:32,textAlign:'right'}}>{count}</span>
+              </div>
+            );
+          })}
+        </Card>
+        {/* Top & Bottom Performers */}
+        <Card>
+          <div style={{fontWeight:700,fontSize:14,marginBottom:16}}>Top & Risiko Kunden</div>
+          <div style={{fontSize:11,fontWeight:700,color:C.green,marginBottom:8,letterSpacing:'0.5px'}}>TOP PERFORMER</div>
+          {[...CUSTOMERS].sort((a,b)=>b.health-a.health).slice(0,3).map(c=>(
+            <div key={c.id} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 0'}}>
+              <Avatar initials={c.initials} color={c.color} size={28}/>
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{c.name}</span>
+              <span style={{fontSize:12,fontWeight:700,color:C.green}}>{c.health}</span>
+            </div>
+          ))}
+          <div style={{height:1,background:C.border,margin:'10px 0'}}/>
+          <div style={{fontSize:11,fontWeight:700,color:C.red,marginBottom:8,letterSpacing:'0.5px'}}>CHURN RISIKO</div>
+          {[...CUSTOMERS].sort((a,b)=>a.health-b.health).slice(0,3).map(c=>(
+            <div key={c.id} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 0'}}>
+              <Avatar initials={c.initials} color={c.color} size={28}/>
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{c.name}</span>
+              <span style={{fontSize:12,fontWeight:700,color:C.red}}>{c.health}</span>
+            </div>
+          ))}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────
+function App(){
+  const [view,setView]=useState('dashboard');
+  const [selectedId,setSelectedId]=useState(null);
+
+  const viewTitles={
+    dashboard:'Dashboard',kunden:'Kunden',kontakte:'Kontakte',
+    'kunden-detail':CUSTOMERS.find(c=>c.id===selectedId)?.name||'Kunde',
+    health:'Health Scores',onboarding:'Onboarding',renewals:'Renewals',
+    kommunikation:'Kommunikation',berichte:'Berichte',
+    einstellungen:'Einstellungen',hilfe:'Hilfe & Support',
+  };
+
+  return(
+    <div style={{display:'flex',height:'100vh',overflow:'hidden'}}>
+      <Sidebar view={view} setView={v=>{setView(v);}}/>
+      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <TopBar
+          title={viewTitles[view]||view}
+          onBack={view==='kunden-detail'?()=>setView('kunden'):undefined}
+          backLabel="Kunden"
+        />
+        <div style={{flex:1,overflow:'auto',background:C.bg}}>
+          {view==='dashboard'&&<Dashboard setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='kunden'&&<KundenList setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='kunden-detail'&&<KundeDetail id={selectedId} setView={setView}/>}
+          {view==='kontakte'&&<KontakteView setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='health'&&<HealthView setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='onboarding'&&<OnboardingView setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='renewals'&&<RenewalsView setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='kommunikation'&&<KommunikationView setView={setView} setSelectedId={setSelectedId}/>}
+          {view==='berichte'&&<BerichteView/>}
+          {(view==='einstellungen'||view==='hilfe')&&(
+            <div style={{padding:28}}>
+              <div style={{padding:48,textAlign:'center',color:C.text3,fontSize:14}}>
+                Dieser Bereich wird demnächst verfügbar sein.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
