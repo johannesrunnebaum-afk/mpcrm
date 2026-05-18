@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { CUSTOMERS } from '@/lib/data'
 import {
   DashboardIcon, KundenIcon, KontakteIcon, HealthIcon, OnboardingIcon,
@@ -27,11 +28,15 @@ const NAV2 = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const [pending, setPending] = useState<string | null>(null)
   const atRisk = CUSTOMERS.filter((c) => c.status === 'Gefährdet').length
 
+  useEffect(() => { setPending(null) }, [pathname])
+
   function isActive(href: string) {
-    if (href === '/') return pathname === '/'
-    return pathname.startsWith(href)
+    const current = pending ?? pathname
+    if (href === '/') return current === '/'
+    return current.startsWith(href)
   }
 
   return (
@@ -107,6 +112,7 @@ export default function Sidebar() {
             <Link
               key={id}
               href={href}
+              onClick={() => setPending(href)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -152,6 +158,7 @@ export default function Sidebar() {
           <Link
             key={href}
             href={href}
+            onClick={() => setPending(href)}
             style={{
               display: 'flex',
               alignItems: 'center',
