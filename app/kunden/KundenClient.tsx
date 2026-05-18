@@ -43,10 +43,7 @@ export default function KundenClient({ customers: initial }: { customers: Custom
 
   const totalMrr = initial.reduce((s, c) => s + c.mrr, 0)
 
-  function openCreate() {
-    setForm(emptyForm)
-    setModal({ mode: 'create' })
-  }
+  function openCreate() { setForm(emptyForm); setModal({ mode: 'create' }) }
 
   function openEdit(c: Customer) {
     setForm({
@@ -56,10 +53,6 @@ export default function KundenClient({ customers: initial }: { customers: Custom
       projects: String(c.projects), nps: String(c.nps), color: c.color,
     })
     setModal({ mode: 'edit', customer: c })
-  }
-
-  function openDelete(c: Customer) {
-    setModal({ mode: 'delete', customer: c })
   }
 
   function closeModal() { setModal(null) }
@@ -81,54 +74,55 @@ export default function KundenClient({ customers: initial }: { customers: Custom
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    startTransition(async () => {
-      await actionCreateCustomer(buildCustomer())
-      router.refresh()
-      closeModal()
-    })
+    startTransition(async () => { await actionCreateCustomer(buildCustomer()); router.refresh(); closeModal() })
   }
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault()
     if (modal?.mode !== 'edit') return
-    startTransition(async () => {
-      await actionUpdateCustomer(modal.customer.id, buildCustomer())
-      router.refresh()
-      closeModal()
-    })
+    startTransition(async () => { await actionUpdateCustomer(modal.customer.id, buildCustomer()); router.refresh(); closeModal() })
   }
 
   async function handleDelete() {
     if (modal?.mode !== 'delete') return
-    startTransition(async () => {
-      await actionDeleteCustomer(modal.customer.id)
-      router.refresh()
-      closeModal()
-    })
+    startTransition(async () => { await actionDeleteCustomer(modal.customer.id); router.refresh(); closeModal() })
+  }
+
+  const btnPrimary: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px',
+    background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: '#fff',
+    borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none',
+    boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
   }
 
   return (
     <div style={{ padding: 28, overflow: 'auto', flex: 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.3px' }}>Kunden</h2>
-          <p style={{ color: '#6B6B6B', fontSize: 13, marginTop: 2 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 20, letterSpacing: '-0.5px', color: '#0F0F1A' }}>Kunden</h2>
+          <p style={{ color: '#6B7280', fontSize: 13, marginTop: 2 }}>
             {initial.length} Kunden insgesamt · {totalMrr.toLocaleString('de-DE')} € MRR
           </p>
         </div>
-        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={openCreate} style={btnPrimary}>
           <PlusIcon />Kunde hinzufügen
         </button>
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#FFFFFF', border: '1px solid #E8E8E8', borderRadius: 8, padding: '7px 12px', flex: 1, maxWidth: 280 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: 10, padding: '8px 14px', flex: 1, maxWidth: 300 }}>
           <SearchIcon />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kunden durchsuchen..." style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, width: '100%' }} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kunden durchsuchen..." style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, width: '100%', color: '#0F0F1A' }} />
         </div>
-        {['Alle', 'Aktiv', 'Gefährdet'].map((f) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${filter === f ? '#1A1A1A' : '#E8E8E8'}`, background: filter === f ? '#1A1A1A' : '#FFFFFF', color: filter === f ? '#fff' : '#1A1A1A', fontWeight: filter === f ? 600 : 400, fontSize: 13, cursor: 'pointer' }}>
-            {f}
+        {['Alle', 'Aktiv', 'Gefährdet'].map((fi) => (
+          <button key={fi} onClick={() => setFilter(fi)} style={{
+            padding: '8px 16px', borderRadius: 10, border: 'none',
+            background: filter === fi ? 'linear-gradient(135deg, #6366F1, #8B5CF6)' : 'rgba(99,102,241,0.06)',
+            color: filter === fi ? '#fff' : '#6B7280',
+            fontWeight: filter === fi ? 600 : 500, fontSize: 13, cursor: 'pointer',
+            boxShadow: filter === fi ? '0 4px 12px rgba(99,102,241,0.25)' : 'none',
+          }}>
+            {fi}
           </button>
         ))}
       </div>
@@ -136,9 +130,9 @@ export default function KundenClient({ customers: initial }: { customers: Custom
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #E8E8E8', background: '#FAFAFA' }}>
+            <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: 'rgba(99,102,241,0.03)' }}>
               {['Kunde', 'Plan', 'MRR', 'Health Score', 'Status', 'Letzter Login', 'Renewal', ''].map((h) => (
-                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B6B6B', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#A0A8B8', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -146,47 +140,46 @@ export default function KundenClient({ customers: initial }: { customers: Custom
             {filtered.map((c) => {
               const days = daysUntil(c.renewal)
               return (
-                <tr key={c.id} style={{ borderBottom: '1px solid #E8E8E8' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#FAFAFA')}
+                <tr key={c.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.04)', transition: 'background 0.15s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                   <td style={{ padding: '12px 16px' }}>
                     <Link href={`/kunden/${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Avatar initials={c.initials} color={c.color} size={32} />
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>
-                        <div style={{ fontSize: 11, color: '#6B6B6B' }}>{c.industry} · {c.users} Nutzer</div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: '#0F0F1A' }}>{c.name}</div>
+                        <div style={{ fontSize: 11, color: '#6B7280' }}>{c.industry} · {c.users} Nutzer</div>
                       </div>
                     </Link>
                   </td>
                   <td style={{ padding: '12px 16px' }}><PlanBadge plan={c.plan} /></td>
-                  <td style={{ padding: '12px 16px', fontWeight: 700, fontSize: 13 }}>{c.mrr} €</td>
+                  <td style={{ padding: '12px 16px', fontWeight: 700, fontSize: 13, color: '#0F0F1A' }}>{c.mrr.toLocaleString('de-DE')} €</td>
                   <td style={{ padding: '12px 16px' }}><HealthBar score={c.health} width={80} /></td>
                   <td style={{ padding: '12px 16px' }}><StatusBadge status={c.status} /></td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B6B6B' }}>{formatDate(c.lastLogin)}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{formatDate(c.lastLogin)}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontSize: 12 }}>
-                      <div style={{ fontWeight: 500 }}>{formatDate(c.renewal)}</div>
-                      <div style={{ color: days <= 60 ? '#DC2626' : days <= 90 ? '#EA580C' : '#6B6B6B', fontSize: 11, marginTop: 1 }}>{days} Tage</div>
+                      <div style={{ fontWeight: 500, color: '#0F0F1A' }}>{formatDate(c.renewal)}</div>
+                      <div style={{ color: days <= 60 ? '#EF4444' : days <= 90 ? '#F59E0B' : '#6B7280', fontSize: 11, marginTop: 1 }}>{days} Tage</div>
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <button onClick={(e) => { e.preventDefault(); openEdit(c) }} style={{ padding: '5px 8px', border: '1px solid #E8E8E8', borderRadius: 6, background: '#fff', cursor: 'pointer', color: '#6B6B6B' }}><EditIcon /></button>
-                      <button onClick={(e) => { e.preventDefault(); openDelete(c) }} style={{ padding: '5px 8px', border: '1px solid #FEE2E2', borderRadius: 6, background: '#FEF2F2', cursor: 'pointer', color: '#DC2626' }}><TrashIcon /></button>
-                      <Link href={`/kunden/${c.id}`}><ChevronRightIcon /></Link>
+                      <button onClick={(e) => { e.preventDefault(); openEdit(c) }} style={{ padding: '5px 8px', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, background: 'rgba(99,102,241,0.04)', cursor: 'pointer', color: '#6B7280' }}><EditIcon /></button>
+                      <button onClick={(e) => { e.preventDefault(); setModal({ mode: 'delete', customer: c }) }} style={{ padding: '5px 8px', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, background: 'rgba(239,68,68,0.06)', cursor: 'pointer', color: '#EF4444' }}><TrashIcon /></button>
+                      <Link href={`/kunden/${c.id}`} style={{ color: '#A0A8B8' }}><ChevronRightIcon /></Link>
                     </div>
                   </td>
                 </tr>
               )
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: '#ABABAB', fontSize: 13 }}>Keine Kunden gefunden</td></tr>
+              <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#A0A8B8', fontSize: 13 }}>Keine Kunden gefunden</td></tr>
             )}
           </tbody>
         </table>
       </Card>
 
-      {/* Create / Edit Modal */}
       {(modal?.mode === 'create' || modal?.mode === 'edit') && (
         <Modal title={modal.mode === 'create' ? 'Neuen Kunden anlegen' : 'Kunde bearbeiten'} onClose={closeModal} width={560}>
           <form onSubmit={modal.mode === 'create' ? handleCreate : handleEdit}>
@@ -234,18 +227,12 @@ export default function KundenClient({ customers: initial }: { customers: Custom
         </Modal>
       )}
 
-      {/* Delete Confirm Modal */}
       {modal?.mode === 'delete' && (
         <Modal title="Kunde löschen?" onClose={closeModal} width={420}>
-          <p style={{ fontSize: 14, color: '#6B6B6B', marginBottom: 20 }}>
-            Möchtest du <strong>{modal.customer.name}</strong> wirklich löschen? Alle zugehörigen Kontakte, Aktivitäten und Onboarding-Daten werden ebenfalls gelöscht.
+          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20, lineHeight: 1.6 }}>
+            Möchtest du <strong style={{ color: '#0F0F1A' }}>{modal.customer.name}</strong> wirklich löschen? Alle zugehörigen Kontakte, Aktivitäten und Onboarding-Daten werden ebenfalls gelöscht.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 16, borderTop: '1px solid #E8E8E8' }}>
-            <button type="button" onClick={closeModal} style={{ padding: '8px 18px', border: '1px solid #E8E8E8', borderRadius: 8, fontWeight: 500, fontSize: 13, background: '#fff', cursor: 'pointer' }}>Abbrechen</button>
-            <button type="button" onClick={handleDelete} disabled={isPending} style={{ padding: '8px 18px', background: '#DC2626', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-              {isPending ? 'Löschen...' : 'Endgültig löschen'}
-            </button>
-          </div>
+          <FormActions onCancel={closeModal} submitLabel={isPending ? 'Löschen...' : 'Endgültig löschen'} danger />
         </Modal>
       )}
     </div>

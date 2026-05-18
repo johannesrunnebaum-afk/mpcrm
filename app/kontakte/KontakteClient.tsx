@@ -52,10 +52,7 @@ export default function KontakteClient({ contacts, customers }: Props) {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
-    startTransition(async () => {
-      await actionCreateContact(buildContact(Number(form.customerId)))
-      router.refresh(); closeModal()
-    })
+    startTransition(async () => { await actionCreateContact(buildContact(Number(form.customerId))); router.refresh(); closeModal() })
   }
 
   async function handleEdit(e: React.FormEvent) {
@@ -69,37 +66,34 @@ export default function KontakteClient({ contacts, customers }: Props) {
 
   async function handleDelete() {
     if (modal?.mode !== 'delete') return
-    startTransition(async () => {
-      await actionDeleteContact(modal.contact.id)
-      router.refresh(); closeModal()
-    })
+    startTransition(async () => { await actionDeleteContact(modal.contact.id); router.refresh(); closeModal() })
   }
 
   return (
     <div style={{ padding: 28, overflow: 'auto', flex: 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-0.3px' }}>Kontakte</h2>
-          <p style={{ color: '#6B6B6B', fontSize: 13, marginTop: 2 }}>{contacts.length} Kontakte insgesamt</p>
+          <h2 style={{ fontWeight: 700, fontSize: 20, letterSpacing: '-0.5px', color: '#0F0F1A' }}>Kontakte</h2>
+          <p style={{ color: '#6B7280', fontSize: 13, marginTop: 2 }}>{contacts.length} Kontakte insgesamt</p>
         </div>
-        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
           <PlusIcon />Kontakt hinzufügen
         </button>
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#FFFFFF', border: '1px solid #E8E8E8', borderRadius: 8, padding: '7px 12px', flex: 1, maxWidth: 280 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: 10, padding: '8px 14px', flex: 1, maxWidth: 300 }}>
           <SearchIcon />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kontakte suchen..." style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, width: '100%' }} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kontakte suchen..." style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 13, width: '100%', color: '#0F0F1A' }} />
         </div>
       </div>
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #E8E8E8', background: '#FAFAFA' }}>
+            <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: 'rgba(99,102,241,0.03)' }}>
               {['Name', 'Unternehmen', 'Rolle', 'E-Mail', 'Telefon', 'Letzter Kontakt', ''].map((h) => (
-                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#6B6B6B' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#A0A8B8', letterSpacing: '0.4px' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -107,36 +101,36 @@ export default function KontakteClient({ contacts, customers }: Props) {
             {filtered.map((ct) => {
               const cust = customers.find((c) => c.id === ct.customerId)
               return (
-                <tr key={ct.id} style={{ borderBottom: '1px solid #E8E8E8' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#FAFAFA')}
+                <tr key={ct.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.04)', transition: 'background 0.15s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Avatar initials={ct.initials} color={ct.color} size={32} />
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>{ct.name}</span>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: '#0F0F1A' }}>{ct.name}</span>
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <Link href={`/kunden/${ct.customerId}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                    <Link href={`/kunden/${ct.customerId}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
                       <Avatar initials={cust?.initials || '?'} color={cust?.color || '#6B6B6B'} size={20} />
                       <span>{cust?.name}</span>
                     </Link>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B6B6B' }}>{ct.role}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#7C3AED' }}>{ct.email}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B6B6B' }}>{ct.phone}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B6B6B' }}>{formatDate(ct.lastContact)}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{ct.role}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6366F1', fontWeight: 500 }}>{ct.email}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{ct.phone}</td>
+                  <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{formatDate(ct.lastContact)}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => openEdit(ct)} style={{ padding: '5px 8px', border: '1px solid #E8E8E8', borderRadius: 6, background: '#fff', cursor: 'pointer', color: '#6B6B6B' }}><EditIcon /></button>
-                      <button onClick={() => setModal({ mode: 'delete', contact: ct })} style={{ padding: '5px 8px', border: '1px solid #FEE2E2', borderRadius: 6, background: '#FEF2F2', cursor: 'pointer', color: '#DC2626' }}><TrashIcon /></button>
+                      <button onClick={() => openEdit(ct)} style={{ padding: '5px 8px', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, background: 'rgba(99,102,241,0.04)', cursor: 'pointer', color: '#6B7280' }}><EditIcon /></button>
+                      <button onClick={() => setModal({ mode: 'delete', contact: ct })} style={{ padding: '5px 8px', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, background: 'rgba(239,68,68,0.06)', cursor: 'pointer', color: '#EF4444' }}><TrashIcon /></button>
                     </div>
                   </td>
                 </tr>
               )
             })}
             {filtered.length === 0 && (
-              <tr><td colSpan={7} style={{ padding: 32, textAlign: 'center', color: '#ABABAB', fontSize: 13 }}>Keine Kontakte gefunden</td></tr>
+              <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#A0A8B8', fontSize: 13 }}>Keine Kontakte gefunden</td></tr>
             )}
           </tbody>
         </table>
@@ -180,15 +174,10 @@ export default function KontakteClient({ contacts, customers }: Props) {
 
       {modal?.mode === 'delete' && (
         <Modal title="Kontakt löschen?" onClose={closeModal} width={420}>
-          <p style={{ fontSize: 14, color: '#6B6B6B', marginBottom: 20 }}>
-            Möchtest du <strong>{modal.contact.name}</strong> wirklich löschen?
+          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20, lineHeight: 1.6 }}>
+            Möchtest du <strong style={{ color: '#0F0F1A' }}>{modal.contact.name}</strong> wirklich löschen?
           </p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 16, borderTop: '1px solid #E8E8E8' }}>
-            <button onClick={closeModal} style={{ padding: '8px 18px', border: '1px solid #E8E8E8', borderRadius: 8, fontWeight: 500, fontSize: 13, background: '#fff', cursor: 'pointer' }}>Abbrechen</button>
-            <button onClick={handleDelete} disabled={isPending} style={{ padding: '8px 18px', background: '#DC2626', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-              {isPending ? 'Löschen...' : 'Löschen'}
-            </button>
-          </div>
+          <FormActions onCancel={closeModal} submitLabel={isPending ? 'Löschen...' : 'Löschen'} danger />
         </Modal>
       )}
     </div>
