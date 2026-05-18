@@ -29,9 +29,24 @@ const NAV2 = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [pending, setPending] = useState<string | null>(null)
+  const [barVisible, setBarVisible] = useState(false)
+  const [barFading, setBarFading] = useState(false)
   const atRisk = CUSTOMERS.filter((c) => c.status === 'Gefährdet').length
 
-  useEffect(() => { setPending(null) }, [pathname])
+  useEffect(() => {
+    setPending(null)
+    if (barVisible) {
+      setBarFading(true)
+      setTimeout(() => { setBarVisible(false); setBarFading(false) }, 350)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
+  function handleNavClick(href: string) {
+    setPending(href)
+    setBarVisible(true)
+    setBarFading(false)
+  }
 
   function isActive(href: string) {
     const current = pending ?? pathname
@@ -112,7 +127,7 @@ export default function Sidebar() {
             <Link
               key={id}
               href={href}
-              onClick={() => setPending(href)}
+              onClick={() => handleNavClick(href)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -152,13 +167,21 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Navigation progress bar */}
+      {barVisible && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 2, zIndex: 9999, overflow: 'hidden', opacity: barFading ? 0 : 1, transition: barFading ? 'opacity 0.35s ease' : 'none', pointerEvents: 'none' }}>
+          <div style={{ height: '100%', background: 'linear-gradient(90deg, transparent 0%, #7C3AED 30%, #C8FF00 60%, #7C3AED 80%, transparent 100%)', backgroundSize: '300% 100%', animation: 'navProgress 1.0s linear infinite' }} />
+          <style>{`@keyframes navProgress { from { background-position: 100% 0 } to { background-position: -100% 0 } }`}</style>
+        </div>
+      )}
+
       {/* Bottom Nav */}
       <div style={{ padding: '8px 10px 16px', borderTop: '1px solid #E8E8E8' }}>
         {NAV2.map(({ href, label, Icon }) => (
           <Link
             key={href}
             href={href}
-            onClick={() => setPending(href)}
+            onClick={() => handleNavClick(href)}
             style={{
               display: 'flex',
               alignItems: 'center',
