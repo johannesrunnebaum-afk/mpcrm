@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Customer, Contact, Activity, OnboardingEntry } from '@/lib/types'
 import { daysUntil, formatDate, healthColor, healthLabel } from '@/lib/helpers'
 import { Card } from '@/components/Card'
 import Avatar from '@/components/Avatar'
 import { StatusBadge, PlanBadge } from '@/components/Badge'
 import HealthBar from '@/components/HealthBar'
+import Modal, { Field, Input, Select, Textarea, FormActions } from '@/components/Modal'
+import { actionCreateActivity, actionUpsertOnboarding } from '@/lib/actions'
+import { ONBOARDING_PHASES } from '@/lib/data'
 
 interface Props {
   customer: Customer
@@ -15,8 +19,17 @@ interface Props {
   onboarding: OnboardingEntry | null
 }
 
+type ActivityModal = { mode: 'activity' | 'note' }
+
 export default function KundeDetailClient({ customer: c, contacts, activities, onboarding }: Props) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [tab, setTab] = useState('overview')
+  const [actModal, setActModal] = useState<ActivityModal | null>(null)
+  const [actType, setActType] = useState<'email' | 'call' | 'note'>('call')
+  const [actText, setActText] = useState('')
+  const [actUser, setActUser] = useState('')
+
   const daysLeft = daysUntil(c.renewal)
   const typeColor: Record<string, string> = { email: '#2563EB', call: '#16A34A', note: '#EA580C', system: '#6B6B6B' }
 
@@ -26,6 +39,48 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
     { id: 'activities', label: 'Aktivitäten' },
     { id: 'onboarding', label: 'Onboarding' },
   ]
+
+  function openActivityModal(type: 'activity' | 'note') {
+    setActType(type === 'note' ? 'note' : 'call')
+    setActText('')
+    setActUser('')
+    setActModal({ mode: type })
+  }
+
+  async function handleActivitySubmit(e: React.FormEvent) {
+    e.preventDefault()
+    startTransition(async () => {
+      await actionCreateActivity({
+        customerId: c.id, type: actType,
+        text: actText, user: actUser || 'Unbekannt',
+        initials: actUser.split(' ').filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 2) || 'XX',
+        color: '#7C3AED',
+      })
+      router.refresh()
+      setActModal(null)
+    })
+  }
+
+  async function handleToggleStep(stepIndex: number) {
+    if (!onboarding) return
+    const newSteps = onboarding.steps.map((s, i) =>
+      i === stepIndex ? { ...s, done: !s.done } : s,
+    )
+    const allDone = newSteps.every((s) => s.done)
+    const newPhase = allDone ? 'Abgeschlossen' : onboarding.phase === 'Geplant' ? 'In Bearbeitung' : onboarding.phase
+    startTransition(async () => {
+      await actionUpsertOnboarding(c.id, newPhase, newSteps)
+      router.refresh()
+    })
+  }
+
+  async function handlePhaseChange(phase: string) {
+    if (!onboarding) return
+    startTransition(async () => {
+      await actionUpsertOnboarding(c.id, phase, onboarding.steps)
+      router.refresh()
+    })
+  }
 
   return (
     <div style={{ padding: 28, overflow: 'auto', flex: 1 }}>
@@ -43,8 +98,8 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ padding: '8px 16px', border: '1px solid #E8E8E8', borderRadius: 8, fontWeight: 500, fontSize: 13, background: '#FFFFFF' }}>Notiz hinzufügen</button>
-          <button style={{ padding: '8px 16px', background: '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13 }}>Aktivität loggen</button>
+          <button onClick={() => openActivityModal('note')} style={{ padding: '8px 16px', border: '1px solid #E8E8E8', borderRadius: 8, fontWeight: 500, fontSize: 13, background: '#FFFFFF', cursor: 'pointer' }}>Notiz hinzufügen</button>
+          <button onClick={() => openActivityModal('activity')} style={{ padding: '8px 16px', background: '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Aktivität loggen</button>
         </div>
       </div>
 
@@ -92,7 +147,7 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 2, marginBottom: 16, borderBottom: '1px solid #E8E8E8' }}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 16px', fontWeight: tab === t.id ? 700 : 400, fontSize: 13, color: tab === t.id ? '#1A1A1A' : '#6B6B6B', borderBottom: tab === t.id ? '2px solid #1A1A1A' : '2px solid transparent', marginBottom: -1, background: 'transparent' }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 16px', fontWeight: tab === t.id ? 700 : 400, fontSize: 13, color: tab === t.id ? '#1A1A1A' : '#6B6B6B', borderBottom: tab === t.id ? '2px solid #1A1A1A' : '2px solid transparent', marginBottom: -1, background: 'transparent', cursor: 'pointer' }}>
             {t.label}
           </button>
         ))}
@@ -158,6 +213,9 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
                   <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B6B6B' }}>{formatDate(ct.lastContact)}</td>
                 </tr>
               ))}
+              {contacts.length === 0 && (
+                <tr><td colSpan={5} style={{ padding: 32, textAlign: 'center', color: '#ABABAB', fontSize: 13 }}>Keine Kontakte vorhanden</td></tr>
+              )}
             </tbody>
           </table>
         </Card>
@@ -165,6 +223,9 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
 
       {tab === 'activities' && (
         <Card>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button onClick={() => openActivityModal('activity')} style={{ padding: '7px 14px', background: '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>+ Aktivität loggen</button>
+          </div>
           {activities.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#ABABAB', padding: 32, fontSize: 13 }}>Noch keine Aktivitäten</div>
           ) : activities.map((a) => (
@@ -183,21 +244,62 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
 
       {tab === 'onboarding' && onboarding && (
         <Card>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>
-            Onboarding Status: <span style={{ color: '#7C3AED' }}>{onboarding.phase}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>
+              Onboarding Status: <span style={{ color: '#7C3AED' }}>{onboarding.phase}</span>
+            </div>
+            <select
+              value={onboarding.phase}
+              onChange={(e) => handlePhaseChange(e.target.value)}
+              disabled={isPending}
+              style={{ padding: '5px 10px', border: '1px solid #E8E8E8', borderRadius: 7, fontSize: 12, cursor: 'pointer', background: '#FAFAFA' }}
+            >
+              {ONBOARDING_PHASES.map((p) => <option key={p}>{p}</option>)}
+            </select>
           </div>
           {onboarding.steps.map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #E8E8E8' }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: s.done ? '#16A34A' : '#F2F2F2', border: `2px solid ${s.done ? '#16A34A' : '#E8E8E8'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #E8E8E8', cursor: 'pointer' }}
+              onClick={() => handleToggleStep(i)}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: s.done ? '#16A34A' : '#F2F2F2', border: `2px solid ${s.done ? '#16A34A' : '#E8E8E8'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
                 {s.done && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: s.done ? '#1A1A1A' : '#6B6B6B' }}>{s.name}</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: s.done ? '#1A1A1A' : '#6B6B6B', flex: 1 }}>{s.name}</span>
               {s.done
-                ? <span style={{ fontSize: 11, color: '#16A34A', marginLeft: 'auto' }}>Abgeschlossen</span>
-                : <span style={{ fontSize: 11, color: '#ABABAB', marginLeft: 'auto' }}>Ausstehend</span>}
+                ? <span style={{ fontSize: 11, color: '#16A34A' }}>Abgeschlossen</span>
+                : <span style={{ fontSize: 11, color: '#ABABAB' }}>Ausstehend</span>}
             </div>
           ))}
         </Card>
+      )}
+
+      {tab === 'onboarding' && !onboarding && (
+        <Card>
+          <div style={{ textAlign: 'center', color: '#ABABAB', padding: 32, fontSize: 13 }}>Kein Onboarding-Eintrag vorhanden</div>
+        </Card>
+      )}
+
+      {/* Activity / Note Modal */}
+      {actModal && (
+        <Modal title={actModal.mode === 'note' ? 'Notiz hinzufügen' : 'Aktivität loggen'} onClose={() => setActModal(null)} width={460}>
+          <form onSubmit={handleActivitySubmit}>
+            {actModal.mode === 'activity' && (
+              <Field label="Typ">
+                <Select value={actType} onChange={(e) => setActType(e.target.value as typeof actType)}>
+                  <option value="call">Anruf</option>
+                  <option value="email">E-Mail</option>
+                  <option value="note">Notiz</option>
+                </Select>
+              </Field>
+            )}
+            <Field label="Beschreibung *">
+              <Textarea required value={actText} onChange={(e) => setActText(e.target.value)} placeholder="Was ist passiert?" rows={4} />
+            </Field>
+            <Field label="Dein Name *">
+              <Input required value={actUser} onChange={(e) => setActUser(e.target.value)} placeholder="z.B. Lisa M." />
+            </Field>
+            <FormActions onCancel={() => setActModal(null)} submitLabel={isPending ? 'Speichern...' : 'Speichern'} />
+          </form>
+        </Modal>
       )}
     </div>
   )
