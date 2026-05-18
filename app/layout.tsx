@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Sidebar />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <TopBar />
-            <main style={{ flex: 1, overflow: 'auto', background: '#F2F2F2' }}>
+            <main style={{ flex: 1, overflow: 'auto' }}>
               {children}
             </main>
           </div>

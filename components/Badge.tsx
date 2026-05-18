@@ -4,40 +4,35 @@ interface BadgeProps {
   label: string
   color: string
   bg: string
+  glow?: string
 }
 
-export function Badge({ label, color, bg }: BadgeProps) {
+export function Badge({ label, color, bg, glow }: BadgeProps) {
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '3px 10px',
-        borderRadius: 20,
-        fontSize: 12,
-        fontWeight: 600,
-        color,
-        background: bg,
-      }}
-    >
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+      color, background: bg,
+      boxShadow: glow ? `0 2px 8px ${glow}` : 'none',
+      letterSpacing: '0.1px',
+    }}>
       {label}
     </span>
   )
 }
 
 export function StatusBadge({ status }: { status: CustomerStatus }) {
-  if (status === 'Aktiv') return <Badge label="Aktiv" color="#16A34A" bg="#DCFCE7" />
-  if (status === 'Gefährdet') return <Badge label="Gefährdet" color="#DC2626" bg="#FEE2E2" />
-  return <Badge label={status} color="#6B6B6B" bg="#F2F2F2" />
+  if (status === 'Aktiv') return <Badge label="● Aktiv" color="#16A34A" bg="rgba(22,163,74,0.1)" glow="rgba(22,163,74,0.15)" />
+  if (status === 'Gefährdet') return <Badge label="● Gefährdet" color="#EF4444" bg="rgba(239,68,68,0.1)" glow="rgba(239,68,68,0.15)" />
+  return <Badge label={status} color="#6B7280" bg="rgba(107,114,128,0.1)" />
 }
 
 export function PlanBadge({ plan }: { plan: Plan }) {
-  const map: Record<Plan, [string, string]> = {
-    Pro: ['#7C3AED', '#EDE9FE'],
-    Business: ['#2563EB', '#DBEAFE'],
-    Starter: ['#6B6B6B', '#F0F0F0'],
+  const map: Record<Plan, [string, string, string]> = {
+    Pro:      ['#6366F1', 'rgba(99,102,241,0.1)',  'rgba(99,102,241,0.2)'],
+    Business: ['#0EA5E9', 'rgba(14,165,233,0.1)',  'rgba(14,165,233,0.2)'],
+    Starter:  ['#6B7280', 'rgba(107,114,128,0.1)', ''],
   }
-  const [color, bg] = map[plan]
-  return <Badge label={plan} color={color} bg={bg} />
+  const [color, bg, glow] = map[plan]
+  return <Badge label={plan} color={color} bg={bg} glow={glow} />
 }

@@ -18,11 +18,11 @@ export default function Modal({ title, onClose, children, width = 520 }: Props) 
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(15,15,26,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={onClose}
     >
       <div
-        style={{ background: '#fff', borderRadius: 14, padding: 28, width: '100%', maxWidth: width, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #FAFBFF 100%)', borderRadius: 20, padding: 28, width: '100%', maxWidth: width, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 8px 40px rgba(99,102,241,0.15), 0 1px 0 rgba(255,255,255,0.8) inset', border: '1px solid rgba(255,255,255,0.9)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
@@ -71,11 +71,11 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export function FormActions({ onCancel, submitLabel = 'Speichern', danger }: { onCancel: () => void; submitLabel?: string; danger?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 16, borderTop: '1px solid #E8E8E8' }}>
-      <button type="button" onClick={onCancel} style={{ padding: '8px 18px', border: '1px solid #E8E8E8', borderRadius: 8, fontWeight: 500, fontSize: 13, background: '#fff', cursor: 'pointer' }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+      <button type="button" onClick={onCancel} style={{ padding: '8px 18px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, fontWeight: 500, fontSize: 13, background: '#fff', cursor: 'pointer', color: '#6B7280' }}>
         Abbrechen
       </button>
-      <button type="submit" style={{ padding: '8px 18px', background: danger ? '#DC2626' : '#1A1A1A', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+      <button type="submit" style={{ padding: '8px 20px', background: danger ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer', boxShadow: danger ? '0 4px 12px rgba(239,68,68,0.3)' : '0 4px 12px rgba(99,102,241,0.35)' }}>
         {submitLabel}
       </button>
     </div>
