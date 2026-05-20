@@ -6,6 +6,7 @@ import {
   createContact, updateContact, deleteContact,
   createActivity, upsertOnboarding, updateProfile,
 } from './db'
+import { sendEmail } from './email'
 import type { Customer, Contact, Activity, OnboardingStep, Profile } from './types'
 
 // ─── Customers ───────────────────────────────────────────────────────────────
@@ -55,6 +56,37 @@ export async function actionCreateActivity(
 
 export async function actionUpdateProfile(input: Partial<Omit<Profile, 'id'>>) {
   await updateProfile(input)
+  revalidatePath('/', 'layout')
+}
+
+// ─── Email ───────────────────────────────────────────────────────────────────
+
+export async function actionSendEmail(input: {
+  customerId: number
+  toEmail: string
+  toName: string
+  subject: string
+  body: string
+  fromName: string
+  replyTo?: string
+}): Promise<void> {
+  await sendEmail({
+    to: input.toEmail,
+    toName: input.toName,
+    subject: input.subject,
+    body: input.body,
+    fromName: input.fromName,
+    replyTo: input.replyTo,
+  })
+  // Auto-log as activity
+  await createActivity({
+    customerId: input.customerId,
+    type: 'email',
+    text: `E-Mail an ${input.toName} (${input.toEmail}): „${input.subject}"`,
+    user: input.fromName,
+    initials: input.fromName.split(' ').filter(Boolean).map((w: string) => w[0].toUpperCase()).join('').slice(0, 2),
+    color: '#6366F1',
+  })
   revalidatePath('/', 'layout')
 }
 

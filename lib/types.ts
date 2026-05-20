@@ -1,4 +1,4 @@
-export type Plan = 'Starter' | 'Pro' | 'Business'
+export type Plan = 'Free' | 'Starter' | 'Pro' | 'Business'
 
 export interface Profile {
   id: number

@@ -9,7 +9,7 @@ import Avatar from '@/components/Avatar'
 import { StatusBadge, PlanBadge } from '@/components/Badge'
 import HealthBar from '@/components/HealthBar'
 import Modal, { Field, Input, Select, Textarea, FormActions } from '@/components/Modal'
-import { actionCreateActivity, actionUpsertOnboarding } from '@/lib/actions'
+import { actionCreateActivity, actionUpsertOnboarding, actionSendEmail } from '@/lib/actions'
 import { ONBOARDING_PHASES } from '@/lib/data'
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
 }
 
 type ActivityModal = { mode: 'activity' | 'note' }
+type EmailModal = { toEmail: string; toName: string }
 
 const typeColor: Record<string, string> = { email: '#6366F1', call: '#10B981', note: '#F59E0B', system: '#94A3B8' }
 
@@ -31,6 +32,13 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
   const [actType, setActType] = useState<'email' | 'call' | 'note'>('call')
   const [actText, setActText] = useState('')
   const [actUser, setActUser] = useState('')
+  const [emailModal, setEmailModal] = useState<EmailModal | null>(null)
+  const [emailSubject, setEmailSubject] = useState('')
+  const [emailBody, setEmailBody] = useState('')
+  const [emailFrom, setEmailFrom] = useState('Johannes Runnebaum')
+  const [emailReplyTo, setEmailReplyTo] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
 
   const daysLeft = daysUntil(c.renewal)
 
@@ -70,6 +78,38 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
     startTransition(async () => { await actionUpsertOnboarding(c.id, newPhase, newSteps); router.refresh() })
   }
 
+  function openEmailModal(toEmail: string, toName: string) {
+    setEmailModal({ toEmail, toName })
+    setEmailSubject('')
+    setEmailBody('')
+    setEmailError('')
+    setEmailSent(false)
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!emailModal) return
+    setEmailError('')
+    startTransition(async () => {
+      try {
+        await actionSendEmail({
+          customerId: c.id,
+          toEmail: emailModal.toEmail,
+          toName: emailModal.toName,
+          subject: emailSubject,
+          body: emailBody,
+          fromName: emailFrom,
+          replyTo: emailReplyTo || undefined,
+        })
+        setEmailSent(true)
+        router.refresh()
+        setTimeout(() => setEmailModal(null), 2000)
+      } catch (err) {
+        setEmailError(err instanceof Error ? err.message : 'Fehler beim Senden')
+      }
+    })
+  }
+
   async function handlePhaseChange(phase: string) {
     if (!onboarding) return
     startTransition(async () => { await actionUpsertOnboarding(c.id, phase, onboarding.steps); router.refresh() })
@@ -92,7 +132,17 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => openActivityModal('note')} style={{ padding: '8px 16px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, fontWeight: 500, fontSize: 13, background: 'rgba(255,255,255,0.8)', cursor: 'pointer', color: '#6B7280' }}>
-            Notiz hinzufügen
+            Notiz
+          </button>
+          <button
+            onClick={() => {
+              const first = contacts[0]
+              openEmailModal(first?.email ?? '', first?.name ?? c.name)
+            }}
+            style={{ padding: '8px 16px', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 10, fontWeight: 600, fontSize: 13, background: 'rgba(99,102,241,0.06)', cursor: 'pointer', color: '#6366F1', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            E-Mail senden
           </button>
           <button onClick={() => openActivityModal('activity')} style={{ padding: '8px 18px', background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: '#fff', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
             Aktivität loggen
@@ -197,7 +247,7 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: 'rgba(99,102,241,0.03)' }}>
-                {['Name', 'Rolle', 'E-Mail', 'Telefon', 'Letzter Kontakt'].map((h) => (
+                {['Name', 'Rolle', 'E-Mail', 'Telefon', 'Letzter Kontakt', ''].map((h) => (
                   <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#A0A8B8', letterSpacing: '0.4px' }}>{h}</th>
                 ))}
               </tr>
@@ -217,6 +267,15 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
                   <td style={{ padding: '12px 16px', fontSize: 12, color: '#6366F1', fontWeight: 500 }}>{ct.email}</td>
                   <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{ct.phone}</td>
                   <td style={{ padding: '12px 16px', fontSize: 12, color: '#6B7280' }}>{formatDate(ct.lastContact)}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <button
+                      onClick={() => openEmailModal(ct.email, ct.name)}
+                      style={{ padding: '5px 12px', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, background: 'rgba(99,102,241,0.06)', cursor: 'pointer', color: '#6366F1', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                      Senden
+                    </button>
+                  </td>
                 </tr>
               ))}
               {contacts.length === 0 && (
@@ -282,6 +341,58 @@ export default function KundeDetailClient({ customer: c, contacts, activities, o
         <Card>
           <div style={{ textAlign: 'center', color: '#A0A8B8', padding: 40, fontSize: 13 }}>Kein Onboarding-Eintrag vorhanden</div>
         </Card>
+      )}
+
+      {emailModal && (
+        <Modal title="E-Mail senden" onClose={() => setEmailModal(null)} width={520}>
+          {emailSent ? (
+            <div style={{ textAlign: 'center', padding: '32px 0' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#0F0F1A', marginBottom: 6 }}>E-Mail gesendet!</div>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>Wurde als Aktivität gespeichert.</div>
+            </div>
+          ) : (
+            <form onSubmit={handleEmailSubmit}>
+              {/* Contact selector */}
+              <Field label="An">
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Select
+                    value={emailModal.toEmail}
+                    onChange={(e) => {
+                      const ct = contacts.find((x) => x.email === e.target.value)
+                      setEmailModal({ toEmail: e.target.value, toName: ct?.name ?? emailModal.toName })
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    {contacts.map((ct) => (
+                      <option key={ct.id} value={ct.email}>{ct.name} – {ct.email}</option>
+                    ))}
+                  </Select>
+                </div>
+              </Field>
+              <Field label="Von (Absendername)">
+                <Input required value={emailFrom} onChange={(e) => setEmailFrom(e.target.value)} placeholder="Dein Name" />
+              </Field>
+              <Field label="Reply-To E-Mail (optional)">
+                <Input type="email" value={emailReplyTo} onChange={(e) => setEmailReplyTo(e.target.value)} placeholder="deine@email.de" />
+              </Field>
+              <Field label="Betreff *">
+                <Input required value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} placeholder="z.B. Ihr monatliches Update" />
+              </Field>
+              <Field label="Nachricht *">
+                <Textarea required value={emailBody} onChange={(e) => setEmailBody(e.target.value)} placeholder="Schreib deine Nachricht..." rows={6} />
+              </Field>
+              {emailError && (
+                <div style={{ padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontSize: 12, color: '#EF4444', marginBottom: 8 }}>
+                  {emailError}
+                </div>
+              )}
+              <FormActions onCancel={() => setEmailModal(null)} submitLabel={isPending ? 'Senden...' : 'E-Mail senden'} />
+            </form>
+          )}
+        </Modal>
       )}
 
       {actModal && (

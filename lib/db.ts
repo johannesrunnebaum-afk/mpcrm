@@ -145,6 +145,11 @@ export async function getCustomerById(id: number): Promise<Customer | null> {
 export async function createCustomer(
   input: Omit<Customer, 'id'>,
 ): Promise<Customer> {
+  if (!isConfigured) {
+    const fake: Customer = { id: Date.now(), ...input }
+    CUSTOMERS.push(fake)
+    return fake
+  }
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('customers')
@@ -174,6 +179,11 @@ export async function updateCustomer(
   id: number,
   input: Partial<Omit<Customer, 'id'>>,
 ): Promise<Customer> {
+  if (!isConfigured) {
+    const idx = CUSTOMERS.findIndex((c) => c.id === id)
+    if (idx !== -1) Object.assign(CUSTOMERS[idx], input)
+    return CUSTOMERS[idx] ?? { id, ...input } as Customer
+  }
   const supabase = await createClient()
   const patch: Record<string, unknown> = {}
   if (input.name !== undefined) patch.name = input.name
@@ -201,6 +211,11 @@ export async function updateCustomer(
 }
 
 export async function deleteCustomer(id: number): Promise<void> {
+  if (!isConfigured) {
+    const idx = CUSTOMERS.findIndex((c) => c.id === id)
+    if (idx !== -1) CUSTOMERS.splice(idx, 1)
+    return
+  }
   const supabase = await createClient()
   const { error } = await supabase.from('customers').delete().eq('id', id)
   if (error) throw new Error(error.message)
@@ -249,6 +264,11 @@ export async function getContactsByCustomerId(
 export async function createContact(
   input: Omit<Contact, 'id'>,
 ): Promise<Contact> {
+  if (!isConfigured) {
+    const fake: Contact = { id: Date.now(), ...input }
+    CONTACTS.push(fake)
+    return fake
+  }
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('contacts')
@@ -272,6 +292,11 @@ export async function updateContact(
   id: number,
   input: Partial<Omit<Contact, 'id' | 'customerId'>>,
 ): Promise<Contact> {
+  if (!isConfigured) {
+    const idx = CONTACTS.findIndex((c) => c.id === id)
+    if (idx !== -1) Object.assign(CONTACTS[idx], input)
+    return CONTACTS[idx] ?? { id, ...input } as Contact
+  }
   const supabase = await createClient()
   const patch: Record<string, unknown> = {}
   if (input.name !== undefined) patch.name = input.name
@@ -292,6 +317,11 @@ export async function updateContact(
 }
 
 export async function deleteContact(id: number): Promise<void> {
+  if (!isConfigured) {
+    const idx = CONTACTS.findIndex((c) => c.id === id)
+    if (idx !== -1) CONTACTS.splice(idx, 1)
+    return
+  }
   const supabase = await createClient()
   const { error } = await supabase.from('contacts').delete().eq('id', id)
   if (error) throw new Error(error.message)
@@ -333,6 +363,16 @@ export async function getActivitiesByCustomerId(
 export async function createActivity(
   input: Omit<Activity, 'id' | 'date' | 'time'> & { createdAt?: string },
 ): Promise<Activity> {
+  if (!isConfigured) {
+    const now = input.createdAt ? new Date(input.createdAt) : new Date()
+    const fake: Activity = {
+      id: Date.now(), ...input,
+      date: now.toISOString().split('T')[0],
+      time: now.toTimeString().slice(0, 5),
+    }
+    ACTIVITIES.unshift(fake)
+    return fake
+  }
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('activities')
@@ -387,6 +427,12 @@ export async function upsertOnboarding(
   phase: string,
   steps: OnboardingStep[],
 ): Promise<OnboardingEntry> {
+  if (!isConfigured) {
+    const idx = ONBOARDING_DATA.findIndex((o) => o.customerId === customerId)
+    const entry: OnboardingEntry = { id: idx >= 0 ? ONBOARDING_DATA[idx].id : Date.now(), customerId, phase, steps }
+    if (idx >= 0) ONBOARDING_DATA[idx] = entry; else ONBOARDING_DATA.push(entry)
+    return entry
+  }
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('onboarding')

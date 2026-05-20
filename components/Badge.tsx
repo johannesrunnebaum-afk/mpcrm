@@ -29,10 +29,11 @@ export function StatusBadge({ status }: { status: CustomerStatus }) {
 
 export function PlanBadge({ plan }: { plan: Plan }) {
   const map: Record<Plan, [string, string, string]> = {
-    Pro:      ['#6366F1', 'rgba(99,102,241,0.1)',  'rgba(99,102,241,0.2)'],
-    Business: ['#0EA5E9', 'rgba(14,165,233,0.1)',  'rgba(14,165,233,0.2)'],
-    Starter:  ['#6B7280', 'rgba(107,114,128,0.1)', ''],
+    Free:     ['#A0A8B8', 'rgba(160,168,184,0.12)', ''],
+    Starter:  ['#6B7280', 'rgba(107,114,128,0.1)',  ''],
+    Pro:      ['#6366F1', 'rgba(99,102,241,0.1)',   'rgba(99,102,241,0.2)'],
+    Business: ['#0EA5E9', 'rgba(14,165,233,0.1)',   'rgba(14,165,233,0.2)'],
   }
-  const [color, bg, glow] = map[plan]
+  const [color, bg, glow] = map[plan] ?? map['Starter']
   return <Badge label={plan} color={color} bg={bg} glow={glow} />
 }

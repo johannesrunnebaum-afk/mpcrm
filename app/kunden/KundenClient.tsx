@@ -21,8 +21,15 @@ function toInitials(name: string) {
 
 const emptyForm = {
   name: '', industry: '', plan: 'Starter' as Customer['plan'],
-  mrr: '', health: '75', status: 'Aktiv' as Customer['status'],
+  mrr: '', status: 'Aktiv' as Customer['status'],
   renewal: '', users: '1', campaigns: '0', projects: '0', nps: '8', color: '#7C3AED',
+}
+
+function calcHealth(nps: number, plan: Customer['plan'], status: Customer['status']): number {
+  const npsScore = Math.round((nps / 10) * 50)
+  const planScore: Record<Customer['plan'], number> = { Free: 0, Starter: 10, Pro: 20, Business: 30 }
+  const statusScore = status === 'Aktiv' ? 20 : 0
+  return Math.min(100, npsScore + (planScore[plan] ?? 10) + statusScore)
 }
 
 export default function KundenClient({ customers: initial }: { customers: Customer[] }) {
@@ -48,7 +55,7 @@ export default function KundenClient({ customers: initial }: { customers: Custom
   function openEdit(c: Customer) {
     setForm({
       name: c.name, industry: c.industry || '', plan: c.plan,
-      mrr: String(c.mrr), health: String(c.health), status: c.status,
+      mrr: String(c.mrr), status: c.status,
       renewal: c.renewal, users: String(c.users), campaigns: String(c.campaigns),
       projects: String(c.projects), nps: String(c.nps), color: c.color,
     })
@@ -63,12 +70,14 @@ export default function KundenClient({ customers: initial }: { customers: Custom
   }
 
   function buildCustomer(): Omit<Customer, 'id'> {
+    const nps = Number(form.nps)
     return {
       name: form.name, initials: toInitials(form.name), color: form.color,
-      plan: form.plan, mrr: Number(form.mrr), health: Number(form.health),
+      plan: form.plan, mrr: Number(form.mrr),
+      health: calcHealth(nps, form.plan, form.status),
       status: form.status, renewal: form.renewal, industry: form.industry,
       users: Number(form.users), lastLogin: new Date().toISOString().split('T')[0],
-      campaigns: Number(form.campaigns), projects: Number(form.projects), nps: Number(form.nps),
+      campaigns: Number(form.campaigns), projects: Number(form.projects), nps,
     }
   }
 
@@ -192,7 +201,7 @@ export default function KundenClient({ customers: initial }: { customers: Custom
               </Field>
               <Field label="Plan *">
                 <Select required value={form.plan} onChange={f('plan')}>
-                  <option>Starter</option><option>Pro</option><option>Business</option>
+                  <option>Free</option><option>Starter</option><option>Pro</option><option>Business</option>
                 </Select>
               </Field>
               <Field label="Status *">
@@ -203,8 +212,14 @@ export default function KundenClient({ customers: initial }: { customers: Custom
               <Field label="MRR (€) *">
                 <Input required type="number" min="0" value={form.mrr} onChange={f('mrr')} placeholder="0" />
               </Field>
-              <Field label="Health Score (0–100)">
-                <Input type="number" min="0" max="100" value={form.health} onChange={f('health')} />
+              <Field label="Health Score">
+                <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.12)', fontSize: 13, color: '#0F0F1A', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, height: 5, background: 'rgba(0,0,0,0.07)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ width: `${calcHealth(Number(form.nps), form.plan, form.status)}%`, height: '100%', background: 'linear-gradient(90deg,#6366F1,#8B5CF6)', borderRadius: 3, transition: 'width 0.3s' }} />
+                  </div>
+                  <span style={{ fontWeight: 700, fontSize: 12, color: '#6366F1', minWidth: 30, textAlign: 'right' }}>{calcHealth(Number(form.nps), form.plan, form.status)}</span>
+                </div>
+                <p style={{ fontSize: 11, color: '#A0A8B8', marginTop: 4 }}>Automatisch aus NPS, Plan & Status berechnet</p>
               </Field>
               <Field label="Renewal-Datum *">
                 <Input required type="date" value={form.renewal} onChange={f('renewal')} />
@@ -229,10 +244,12 @@ export default function KundenClient({ customers: initial }: { customers: Custom
 
       {modal?.mode === 'delete' && (
         <Modal title="Kunde löschen?" onClose={closeModal} width={420}>
-          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20, lineHeight: 1.6 }}>
-            Möchtest du <strong style={{ color: '#0F0F1A' }}>{modal.customer.name}</strong> wirklich löschen? Alle zugehörigen Kontakte, Aktivitäten und Onboarding-Daten werden ebenfalls gelöscht.
-          </p>
-          <FormActions onCancel={closeModal} submitLabel={isPending ? 'Löschen...' : 'Endgültig löschen'} danger />
+          <form onSubmit={(e) => { e.preventDefault(); handleDelete() }}>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20, lineHeight: 1.6 }}>
+              Möchtest du <strong style={{ color: '#0F0F1A' }}>{modal.customer.name}</strong> wirklich löschen? Alle zugehörigen Kontakte, Aktivitäten und Onboarding-Daten werden ebenfalls gelöscht.
+            </p>
+            <FormActions onCancel={closeModal} submitLabel={isPending ? 'Löschen...' : 'Endgültig löschen'} danger />
+          </form>
         </Modal>
       )}
     </div>
