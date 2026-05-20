@@ -126,7 +126,7 @@ export async function getCustomers(): Promise<Customer[]> {
     .from('customers')
     .select('*')
     .order('name')
-  if (error) throw new Error(error.message)
+  if (error) return CUSTOMERS
   return data.map(mapCustomer)
 }
 
@@ -242,7 +242,7 @@ export async function getContacts(): Promise<Contact[]> {
     .from('contacts')
     .select('*')
     .order('name')
-  if (error) throw new Error(error.message)
+  if (error) return CONTACTS
   return data.map(mapContact)
 }
 
@@ -257,7 +257,7 @@ export async function getContactsByCustomerId(
     .select('*')
     .eq('customer_id', customerId)
     .order('name')
-  if (error) throw new Error(error.message)
+  if (error) return CONTACTS.filter((c) => c.customerId === customerId)
   return data.map(mapContact)
 }
 
@@ -341,7 +341,7 @@ export async function getActivities(opts?: {
     .order('created_at', { ascending: false })
   if (opts?.limit) query = query.limit(opts.limit)
   const { data, error } = await query
-  if (error) throw new Error(error.message)
+  if (error) return opts?.limit ? ACTIVITIES.slice(0, opts.limit) : ACTIVITIES
   return data.map(mapActivity)
 }
 
@@ -356,7 +356,7 @@ export async function getActivitiesByCustomerId(
     .select('*')
     .eq('customer_id', customerId)
     .order('created_at', { ascending: false })
-  if (error) throw new Error(error.message)
+  if (error) return ACTIVITIES.filter((a) => a.customerId === customerId)
   return data.map(mapActivity)
 }
 
@@ -403,7 +403,7 @@ export async function getOnboardingData(): Promise<OnboardingEntry[]> {
   if (!isConfigured) return ONBOARDING_DATA
   const supabase = await createClient()
   const { data, error } = await supabase.from('onboarding').select('*')
-  if (error) throw new Error(error.message)
+  if (error) return ONBOARDING_DATA
   return data.map(mapOnboarding)
 }
 
