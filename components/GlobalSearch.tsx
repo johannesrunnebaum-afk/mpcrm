@@ -95,12 +95,14 @@ export default function GlobalSearch() {
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '7px 14px',
-          background: isActive ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)',
-          border: `1px solid ${focused ? 'rgba(99,102,241,0.4)' : isActive ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.15)'}`,
-          borderRadius: focused ? '12px 12px 0 0' : 12,
+          background: focused ? 'rgba(255,255,255,0.28)' : isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.16)',
+          backdropFilter: 'blur(48px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(180%)',
+          border: `1px solid ${focused ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.4)'}`,
+          borderRadius: focused ? '14px 14px 0 0' : 14,
           width: focused ? 320 : hovered ? 260 : 220,
           transition: 'width 0.25s ease, border-color 0.15s, background 0.15s, border-radius 0.15s',
-          boxShadow: focused ? '0 0 0 3px rgba(99,102,241,0.1)' : 'none',
+          boxShadow: focused ? 'inset 0 1px 0 rgba(255,255,255,0.7), 0 0 0 3px rgba(99,102,241,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.5)',
           cursor: 'text',
         }}
         onClick={() => inputRef.current?.focus()}
@@ -130,11 +132,13 @@ export default function GlobalSearch() {
       {showDropdown && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #FAFBFF 100%)',
-          border: '1px solid rgba(99,102,241,0.25)',
+          background: 'rgba(255,255,255,0.28)',
+          backdropFilter: 'blur(60px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.5)',
           borderTop: 'none',
-          borderRadius: '0 0 14px 14px',
-          boxShadow: '0 16px 40px rgba(99,102,241,0.15)',
+          borderRadius: '0 0 16px 16px',
+          boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.3), 0 20px 50px rgba(99,102,241,0.18)',
           overflow: 'hidden',
           zIndex: 200,
           maxHeight: 380,

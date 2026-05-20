@@ -24,8 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <TopBarWrapper />
             <main style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
               {/* Ambient glow spots in the content area */}
-              <div style={{ position: 'fixed', top: '10%', right: '15%', width: 500, height: 500, background: 'radial-gradient(ellipse, rgba(139,92,246,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-              <div style={{ position: 'fixed', bottom: '5%', right: '5%', width: 400, height: 400, background: 'radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ position: 'fixed', top: '5%', right: '10%', width: 600, height: 600, background: 'radial-gradient(ellipse, rgba(139,92,246,0.14) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ position: 'fixed', bottom: '0%', right: '0%', width: 500, height: 500, background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ position: 'fixed', top: '40%', left: '20%', width: 400, height: 400, background: 'radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 {children}
               </div>

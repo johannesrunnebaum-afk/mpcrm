@@ -33,12 +33,12 @@ export default async function OnboardingPage() {
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
                 padding: '10px 14px',
-                background: 'rgba(255,255,255,0.55)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.8)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                background: 'rgba(255,255,255,0.16)',
+                backdropFilter: 'blur(48px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(48px) saturate(180%)',
+                borderRadius: 16,
+                border: '1px solid rgba(255,255,255,0.4)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 16px rgba(0,0,0,0.06)',
               }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: col, boxShadow: `0 0 8px ${col}88`, flexShrink: 0 }} />
                 <span style={{ fontWeight: 700, fontSize: 13, color: '#0F0F1A', flex: 1 }}>{phase}</span>
@@ -55,17 +55,17 @@ export default async function OnboardingPage() {
                   return (
                     <Link key={o.id} href={`/kunden/${cust.id}`} style={{ display: 'block' }}>
                       <div style={{
-                        background: 'rgba(255,255,255,0.7)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255,255,255,0.9)',
-                        borderRadius: 14,
+                        background: 'rgba(255,255,255,0.16)',
+                        backdropFilter: 'blur(48px) saturate(180%)',
+                        WebkitBackdropFilter: 'blur(48px) saturate(180%)',
+                        border: '1px solid rgba(255,255,255,0.4)',
+                        borderRadius: 18,
                         padding: 14,
-                        boxShadow: '0 2px 8px rgba(99,102,241,0.06)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 16px rgba(99,102,241,0.08)',
                         transition: 'transform 0.15s, box-shadow 0.15s',
                       }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(99,102,241,0.14)' }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(99,102,241,0.06)' }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.7), 0 12px 32px rgba(99,102,241,0.18)' }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 16px rgba(99,102,241,0.08)' }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                           <Avatar initials={cust.initials} color={cust.color} size={28} />

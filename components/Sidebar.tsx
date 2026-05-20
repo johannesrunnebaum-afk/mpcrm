@@ -55,13 +55,16 @@ export default function Sidebar() {
   return (
     <div style={{
       width: 224,
-      background: 'linear-gradient(180deg, #0D0D1F 0%, #110E2A 100%)',
+      background: 'linear-gradient(180deg, rgba(13,13,31,0.96) 0%, rgba(17,14,42,0.96) 100%)',
+      backdropFilter: 'blur(48px) saturate(150%)',
+      WebkitBackdropFilter: 'blur(48px) saturate(150%)',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
       height: '100vh',
       overflow: 'hidden',
-      borderRight: '1px solid rgba(255,255,255,0.06)',
+      borderRight: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.04), 4px 0 24px rgba(0,0,0,0.2)',
       position: 'relative',
     }}>
       {/* Subtle glow at top */}
@@ -79,7 +82,7 @@ export default function Sidebar() {
         </div>
 
         {/* Workspace */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.07)', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.06)', borderRadius: 12, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)' }}>
           <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <HomeIcon />
           </div>
@@ -101,10 +104,11 @@ export default function Sidebar() {
                 marginBottom: 2, fontWeight: active ? 600 : 400, fontSize: 13,
                 color: active ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
                 background: active
-                  ? 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)'
+                  ? 'linear-gradient(135deg, rgba(99,102,241,0.85) 0%, rgba(139,92,246,0.85) 100%)'
                   : 'transparent',
+                backdropFilter: active ? 'blur(12px)' : 'none',
                 boxShadow: active
-                  ? '0 4px 14px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)'
+                  ? '0 4px 16px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1)'
                   : 'none',
                 transition: 'all 0.15s ease',
               }}
