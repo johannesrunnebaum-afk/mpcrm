@@ -105,10 +105,10 @@ export default function KontakteClient({ contacts, customers }: Props) {
                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99,102,241,0.04)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                   <td style={{ padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Link href={`/kontakte/${ct.id}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Avatar initials={ct.initials} color={ct.color} size={32} />
                       <span style={{ fontWeight: 600, fontSize: 13, color: '#0F0F1A' }}>{ct.name}</span>
-                    </div>
+                    </Link>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <Link href={`/kunden/${ct.customerId}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>

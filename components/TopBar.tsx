@@ -21,7 +21,8 @@ const TITLES: Record<string, string> = {
 export default function TopBar() {
   const pathname = usePathname()
   const isKundeDetail = pathname.startsWith('/kunden/') && pathname !== '/kunden/'
-  const title = isKundeDetail ? 'Kunde' : (TITLES[pathname] || pathname)
+  const isKontaktDetail = pathname.startsWith('/kontakte/') && pathname !== '/kontakte/'
+  const title = isKundeDetail ? 'Kunde' : isKontaktDetail ? 'Kontakt' : (TITLES[pathname] || pathname)
 
   return (
     <div style={{
@@ -38,6 +39,11 @@ export default function TopBar() {
         {isKundeDetail && (
           <Link href="/kunden" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6B7280', fontWeight: 500, fontSize: 13, padding: '5px 10px', borderRadius: 8, background: 'rgba(99,102,241,0.06)' }}>
             <ArrowLeftIcon />Kunden
+          </Link>
+        )}
+        {isKontaktDetail && (
+          <Link href="/kontakte" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6B7280', fontWeight: 500, fontSize: 13, padding: '5px 10px', borderRadius: 8, background: 'rgba(99,102,241,0.06)' }}>
+            <ArrowLeftIcon />Kontakte
           </Link>
         )}
         <h1 style={{ fontSize: 15, fontWeight: 700, color: '#0F0F1A' }}>{title}</h1>

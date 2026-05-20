@@ -163,6 +163,18 @@ export async function deleteCustomer(id: number): Promise<void> {
 
 // ─── Contacts ────────────────────────────────────────────────────────────────
 
+export async function getContactById(id: number): Promise<Contact | null> {
+  if (!isConfigured) return CONTACTS.find((c) => c.id === id) ?? null
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) return null
+  return mapContact(data)
+}
+
 export async function getContacts(): Promise<Contact[]> {
   if (!isConfigured) return CONTACTS
   const supabase = await createClient()
