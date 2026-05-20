@@ -1,4 +1,15 @@
 export type Plan = 'Starter' | 'Pro' | 'Business'
+
+export interface Profile {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  role: string
+  initials: string
+  avatarColor: string
+  avatarUrl: string | null
+}
 export type CustomerStatus = 'Aktiv' | 'Gefährdet'
 export type ActivityType = 'email' | 'call' | 'note' | 'system'
 

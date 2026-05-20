@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BellIcon, ArrowLeftIcon } from '@/components/Icons'
 import GlobalSearch from '@/components/GlobalSearch'
+import type { Profile } from '@/lib/types'
 
 const TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -18,11 +19,15 @@ const TITLES: Record<string, string> = {
   '/hilfe': 'Hilfe & Support',
 }
 
-export default function TopBar() {
+interface Props { profile: Profile }
+
+export default function TopBar({ profile }: Props) {
   const pathname = usePathname()
   const isKundeDetail = pathname.startsWith('/kunden/') && pathname !== '/kunden/'
   const isKontaktDetail = pathname.startsWith('/kontakte/') && pathname !== '/kontakte/'
   const title = isKundeDetail ? 'Kunde' : isKontaktDetail ? 'Kontakt' : (TITLES[pathname] || pathname)
+
+  const fullName = `${profile.firstName} ${profile.lastName}`.trim()
 
   return (
     <div style={{
@@ -59,10 +64,28 @@ export default function TopBar() {
           <span style={{ position: 'absolute', top: 5, right: 5, width: 8, height: 8, borderRadius: '50%', background: '#EF4444', border: '1.5px solid #fff' }} />
         </div>
 
-        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #F59E0B, #EF4444)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, cursor: 'pointer', boxShadow: '0 2px 8px rgba(245,158,11,0.35)' }}>
-          JR
-        </div>
+        <Link href="/einstellungen" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 4px', borderRadius: 24, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.1)', cursor: 'pointer', textDecoration: 'none' }}>
+          <ProfileAvatar profile={profile} size={28} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#0F0F1A', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName}</span>
+        </Link>
       </div>
+    </div>
+  )
+}
+
+export function ProfileAvatar({ profile, size = 34 }: { profile: Profile; size?: number }) {
+  if (profile.avatarUrl) {
+    return (
+      <img
+        src={profile.avatarUrl}
+        alt={profile.initials}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: `0 2px 8px ${profile.avatarColor}55` }}
+      />
+    )
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: `linear-gradient(135deg, ${profile.avatarColor}, ${profile.avatarColor}bb)`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.35, flexShrink: 0, boxShadow: `0 2px 8px ${profile.avatarColor}55` }}>
+      {profile.initials}
     </div>
   )
 }

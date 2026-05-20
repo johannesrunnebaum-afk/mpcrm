@@ -6,7 +6,7 @@
 
 import { createClient } from './supabase/server'
 import { CUSTOMERS, CONTACTS, ACTIVITIES, ONBOARDING_DATA } from './data'
-import type { Customer, Contact, Activity, OnboardingEntry, OnboardingStep } from './types'
+import type { Customer, Contact, Activity, OnboardingEntry, OnboardingStep, Profile } from './types'
 
 const isConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL
 
@@ -70,6 +70,51 @@ function mapOnboarding(row: Record<string, unknown>): OnboardingEntry {
     phase: row.phase as string,
     steps: row.steps as OnboardingStep[],
   }
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_PROFILE: Profile = {
+  id: 1, firstName: 'Johannes', lastName: 'Runnebaum',
+  email: 'johannes.runnebaum@gmail.com', role: 'Admin',
+  initials: 'JR', avatarColor: '#F59E0B', avatarUrl: null,
+}
+
+function mapProfile(row: Record<string, unknown>): Profile {
+  return {
+    id: row.id as number,
+    firstName: row.first_name as string,
+    lastName: row.last_name as string,
+    email: row.email as string,
+    role: row.role as string,
+    initials: row.initials as string,
+    avatarColor: row.avatar_color as string,
+    avatarUrl: (row.avatar_url as string) || null,
+  }
+}
+
+export async function getProfile(): Promise<Profile> {
+  if (!isConfigured) return DEFAULT_PROFILE
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', 1).single()
+  if (error) return DEFAULT_PROFILE
+  return mapProfile(data)
+}
+
+export async function updateProfile(input: Partial<Omit<Profile, 'id'>>): Promise<Profile> {
+  const supabase = await createClient()
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (input.firstName !== undefined) patch.first_name = input.firstName
+  if (input.lastName !== undefined) patch.last_name = input.lastName
+  if (input.email !== undefined) patch.email = input.email
+  if (input.role !== undefined) patch.role = input.role
+  if (input.initials !== undefined) patch.initials = input.initials
+  if (input.avatarColor !== undefined) patch.avatar_color = input.avatarColor
+  if (input.avatarUrl !== undefined) patch.avatar_url = input.avatarUrl
+  const { data, error } = await supabase
+    .from('profiles').update(patch).eq('id', 1).select().single()
+  if (error) throw new Error(error.message)
+  return mapProfile(data)
 }
 
 // ─── Customers ───────────────────────────────────────────────────────────────

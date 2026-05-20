@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { DM_Sans } from 'next/font/google'
 import './globals.css'
 import Sidebar from '@/components/Sidebar'
-import TopBar from '@/components/TopBar'
+import TopBarWrapper from '@/components/TopBarWrapper'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
           <Sidebar />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <TopBar />
+            <TopBarWrapper />
             <main style={{ flex: 1, overflow: 'auto' }}>
               {children}
             </main>

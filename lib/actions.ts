@@ -4,9 +4,9 @@ import { revalidatePath } from 'next/cache'
 import {
   createCustomer, updateCustomer, deleteCustomer,
   createContact, updateContact, deleteContact,
-  createActivity, upsertOnboarding,
+  createActivity, upsertOnboarding, updateProfile,
 } from './db'
-import type { Customer, Contact, Activity, OnboardingStep } from './types'
+import type { Customer, Contact, Activity, OnboardingStep, Profile } from './types'
 
 // ─── Customers ───────────────────────────────────────────────────────────────
 
@@ -48,6 +48,13 @@ export async function actionCreateActivity(
   input: Omit<Activity, 'id' | 'date' | 'time'>,
 ) {
   await createActivity(input)
+  revalidatePath('/', 'layout')
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+
+export async function actionUpdateProfile(input: Partial<Omit<Profile, 'id'>>) {
+  await updateProfile(input)
   revalidatePath('/', 'layout')
 }
 
