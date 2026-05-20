@@ -32,11 +32,11 @@ export default function TopBar({ profile }: Props) {
   return (
     <div style={{
       height: 58,
-      background: 'rgba(255,255,255,0.72)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255,255,255,0.8)',
-      boxShadow: '0 1px 0 rgba(0,0,0,0.05)',
+      background: 'rgba(255,255,255,0.6)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      borderBottom: '1px solid rgba(255,255,255,0.75)',
+      boxShadow: '0 1px 0 rgba(99,102,241,0.06), 0 4px 20px rgba(0,0,0,0.03)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 24px', flexShrink: 0, position: 'relative', zIndex: 10,
     }}>
