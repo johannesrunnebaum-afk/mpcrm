@@ -20,23 +20,23 @@ export default function Modal({ title, onClose, children, width = 520 }: Props) 
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(10,8,20,0.45)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
+        background: 'rgba(10,8,20,0.65)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: 'rgba(255,255,255,0.22)',
-          backdropFilter: 'blur(60px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+          background: 'rgba(240,238,252,0.88)',
+          backdropFilter: 'blur(60px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(180%)',
           borderRadius: 26,
           padding: 28,
           width: '100%', maxWidth: width, maxHeight: '90vh', overflow: 'auto',
-          boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(0,0,0,0.05), 0 24px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(99,102,241,0.12)',
-          border: '1px solid rgba(255,255,255,0.5)',
+          boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.9), 0 24px 60px rgba(0,0,0,0.22), 0 4px 16px rgba(99,102,241,0.14)',
+          border: '1px solid rgba(255,255,255,0.7)',
           position: 'relative',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -54,12 +54,10 @@ export default function Modal({ title, onClose, children, width = 520 }: Props) 
             onClick={onClose}
             style={{
               width: 30, height: 30, borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.5)',
-              background: 'rgba(255,255,255,0.3)',
-              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(0,0,0,0.1)',
+              background: 'rgba(255,255,255,0.7)',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 16, color: '#6B7280',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6)',
             }}
           >×</button>
         </div>
@@ -72,7 +70,7 @@ export default function Modal({ title, onClose, children, width = 520 }: Props) 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5A5F7A', marginBottom: 5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F0F1A', marginBottom: 5, opacity: 0.75 }}>{label}</label>
       {children}
     </div>
   )
@@ -80,15 +78,13 @@ export function Field({ label, children }: { label: string; children: React.Reac
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '9px 13px',
-  border: '1px solid rgba(255,255,255,0.5)',
+  border: '1px solid rgba(99,102,241,0.18)',
   borderRadius: 11,
   fontSize: 13, outline: 'none',
-  background: 'rgba(255,255,255,0.35)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
+  background: 'rgba(255,255,255,0.75)',
   boxSizing: 'border-box',
   color: '#0F0F1A',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 4px rgba(0,0,0,0.04)',
+  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
 }
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -114,12 +110,10 @@ export function FormActions({ onCancel, submitLabel = 'Speichern', danger }: { o
         type="button" onClick={onCancel}
         style={{
           padding: '9px 18px',
-          border: '1px solid rgba(255,255,255,0.5)',
+          border: '1px solid rgba(0,0,0,0.1)',
           borderRadius: 12, fontWeight: 500, fontSize: 13,
-          background: 'rgba(255,255,255,0.3)',
-          backdropFilter: 'blur(8px)',
-          cursor: 'pointer', color: '#5A5F7A',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6)',
+          background: 'rgba(255,255,255,0.7)',
+          cursor: 'pointer', color: '#4B5563',
         }}>
         Abbrechen
       </button>
